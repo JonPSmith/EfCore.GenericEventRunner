@@ -15,32 +15,32 @@ namespace GenericEventRunner.ForEntities
         //Events are created within a single DBContext and are cleared every time SaveChanges/SaveChangesAsync is called
         
         //This holds events that are run before SaveChanges is called
-        private readonly List<IDomainEvent> _beforeSaveEvents = new List<IDomainEvent>();
+        internal List<IDomainEvent> BeforeSaveEvents { get; private set; } = new List<IDomainEvent>();
 
         //This holds events that are run after SaveChanges finishes successfully
-        private readonly List<IDomainEvent> _afterSaveChangesEvents = new List<IDomainEvent>();
+        internal List<IDomainEvent> AfterSaveChangesEvents { get; private set; } = new List<IDomainEvent>();
 
         public void AddBeforeSaveEvent(IDomainEvent dEvent)
         {
-            _beforeSaveEvents.Add(dEvent);
+            BeforeSaveEvents.Add(dEvent);
         }
 
         public void AddAfterSaveEvent(IDomainEvent dEvent)
         {
-            _afterSaveChangesEvents.Add(dEvent);
+            AfterSaveChangesEvents.Add(dEvent);
         }
 
         public ICollection<IDomainEvent> GetBeforeSaveEventsThenClear()
         {
-            var eventCopy = _beforeSaveEvents.ToList();
-            _beforeSaveEvents.Clear();
+            var eventCopy = BeforeSaveEvents.ToList();
+            BeforeSaveEvents.Clear();
             return eventCopy;
         }
 
         public ICollection<IDomainEvent> GetAfterSaveEventsThenClear()
         {
-            var eventCopy = _afterSaveChangesEvents.ToList();
-            _afterSaveChangesEvents.Clear();
+            var eventCopy = AfterSaveChangesEvents.ToList();
+            AfterSaveChangesEvents.Clear();
             return eventCopy;
         }
     }

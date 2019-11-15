@@ -59,6 +59,25 @@ namespace GenericEventRunner.ForHandlers
             } while (shouldRunAgain);
         }
 
+        private async Task RunBeforeSaveChangesEventsAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        {
+            //This has to run until there are no new events, because one event might trigger another event
+            bool shouldRunAgain;
+            do
+            {
+                var eventsToRun = getTrackedEntities.Invoke()
+                    .SelectMany(x => x.Entity.GetBeforeSaveEventsThenClear())
+                    .ToList();
+
+                shouldRunAgain = false;
+                foreach (var domainEvent in eventsToRun)
+                {
+                    shouldRunAgain = true;
+                    await _findRunHandlers.DispatchBeforeSaveAsync(domainEvent);
+                }
+            } while (shouldRunAgain);
+        }
+
         private void RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
         {
             var eventsToRun = getTrackedEntities.Invoke()
