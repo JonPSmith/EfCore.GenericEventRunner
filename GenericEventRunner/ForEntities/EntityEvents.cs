@@ -20,14 +20,12 @@ namespace GenericEventRunner.ForEntities
         //This holds events that are run after SaveChanges finishes successfully
         internal List<IDomainEvent> AfterSaveChangesEvents { get; private set; } = new List<IDomainEvent>();
 
-        public void AddBeforeSaveEvent(IDomainEvent dEvent)
+        public void AddEvent(IDomainEvent dEvent, EventToSend eventToSend = EventToSend.Before)
         {
-            BeforeSaveEvents.Add(dEvent);
-        }
-
-        public void AddAfterSaveEvent(IDomainEvent dEvent)
-        {
-            AfterSaveChangesEvents.Add(dEvent);
+            if (eventToSend == EventToSend.Before || eventToSend == EventToSend.Both)
+                BeforeSaveEvents.Add(dEvent);
+            if (eventToSend == EventToSend.After || eventToSend == EventToSend.Both)
+                AfterSaveChangesEvents.Add(dEvent);
         }
 
         public ICollection<IDomainEvent> GetBeforeSaveEventsThenClear()

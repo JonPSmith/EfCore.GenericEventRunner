@@ -8,6 +8,6 @@ namespace GenericEventRunner.ForHandlers
 {
     public interface IBeforeSaveEventHandlerAsync<in T> where T : IDomainEvent
     {
-        Task HandleAsync(T domainEvent);
+        Task HandleAsync(EntityEvents callingEntity, T domainEvent);
     }
 }

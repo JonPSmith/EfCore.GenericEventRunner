@@ -7,6 +7,6 @@ namespace GenericEventRunner.ForHandlers
 {
     public interface IAfterSaveEventHandler<in T> where T : IDomainEvent
     {
-        void Handle(T domainEvent);
+        void Handle(EntityEvents callingEntity, T domainEvent);
     }
 }

@@ -7,7 +7,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 {
     internal abstract class AfterSaveEventHandler
     {
-        public abstract void Handle(IDomainEvent domainEvent);
+        public abstract void Handle(EntityEvents callingEntity, IDomainEvent domainEvent);
     }
 
     internal class AfterSaveHandler<T> : AfterSaveEventHandler
@@ -20,9 +20,9 @@ namespace GenericEventRunner.ForHandlers.Internal
             _handler = handler;
         }
 
-        public override void Handle(IDomainEvent domainEvent)
+        public override void Handle(EntityEvents callingEntity, IDomainEvent domainEvent)
         {
-            _handler.Handle((T)domainEvent);
+            _handler.Handle(callingEntity, (T)domainEvent);
         }
     }
 }

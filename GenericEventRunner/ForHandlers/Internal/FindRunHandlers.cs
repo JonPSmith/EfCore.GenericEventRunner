@@ -21,51 +21,51 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// <summary>
         /// This finds and runs all the sync BeforeSave handlers built to take this domain event 
         /// </summary>
-        /// <param name="domainEvent"></param>
-        public void DispatchBeforeSave(IDomainEvent domainEvent)
+        /// <param name="entityAndEvent"></param>
+        public void DispatchBeforeSave(EntityAndEvent entityAndEvent)
         {
-            var handlerInterface = typeof(IBeforeSaveEventHandler<>).MakeGenericType(domainEvent.GetType());
-            var wrapperType = typeof(BeforeSaveHandler<>).MakeGenericType(domainEvent.GetType());
+            var handlerInterface = typeof(IBeforeSaveEventHandler<>).MakeGenericType(entityAndEvent.DomainEvent.GetType());
+            var wrapperType = typeof(BeforeSaveHandler<>).MakeGenericType(entityAndEvent.DomainEvent.GetType());
             var wrappedHandlers = _serviceProvider.GetServices(handlerInterface)
                 .Select(handler => (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler));
 
             foreach (var handler in wrappedHandlers)
             {
-                handler.Handle(domainEvent);
+                handler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
             }
         }
 
         /// <summary>
         /// This finds and runs all the sync and async BeforeSave handlers built to take this domain event 
         /// </summary>
-        /// <param name="domainEvent"></param>
-        public async Task DispatchBeforeSaveAsync(IDomainEvent domainEvent)
+        /// <param name="entityAndEvent"></param>
+        public async Task DispatchBeforeSaveAsync(EntityAndEvent entityAndEvent)
         {
-            var handlerInterface = typeof(IBeforeSaveEventHandler<>).MakeGenericType(domainEvent.GetType());
-            var wrapperType = typeof(BeforeSaveHandler<>).MakeGenericType(domainEvent.GetType());
+            var handlerInterface = typeof(IBeforeSaveEventHandler<>).MakeGenericType(entityAndEvent.DomainEvent.GetType());
+            var wrapperType = typeof(BeforeSaveHandler<>).MakeGenericType(entityAndEvent.DomainEvent.GetType());
             var wrappedHandlers = _serviceProvider.GetServices(handlerInterface)
                 .Select(handler => (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler));
 
             foreach (var handler in wrappedHandlers)
             {
-                handler.Handle(domainEvent);
+                handler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
             }
         }
 
         /// <summary>
         /// This finds and runs all the AfterSave handlers built to take this domain event 
         /// </summary>
-        /// <param name="domainEvent"></param>
-        public void DispatchAfterSave(IDomainEvent domainEvent)
+        /// <param name="entityAndEvent"></param>
+        public void DispatchAfterSave(EntityAndEvent entityAndEvent)
         {
-            var handlerInterface = typeof(IAfterSaveEventHandler<>).MakeGenericType(domainEvent.GetType());
-            var wrapperType = typeof(AfterSaveHandler<>).MakeGenericType(domainEvent.GetType());
+            var handlerInterface = typeof(IAfterSaveEventHandler<>).MakeGenericType(entityAndEvent.DomainEvent.GetType());
+            var wrapperType = typeof(AfterSaveHandler<>).MakeGenericType(entityAndEvent.DomainEvent.GetType());
             var wrappedHandlers = _serviceProvider.GetServices(handlerInterface)
                 .Select(handler => (AfterSaveEventHandler)Activator.CreateInstance(wrapperType, handler));
 
             foreach (var handler in wrappedHandlers)
             {
-                handler.Handle(domainEvent);
+                handler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
             }
         }
 

@@ -46,15 +46,18 @@ namespace GenericEventRunner.ForHandlers
             bool shouldRunAgain;
             do
             {
-                var eventsToRun = getTrackedEntities.Invoke()
-                    .SelectMany(x => x.Entity.GetBeforeSaveEventsThenClear())
-                    .ToList();
+                var eventsToRun = new List<EntityAndEvent>();
+                foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
+                {
+                    eventsToRun.AddRange(entity.GetBeforeSaveEventsThenClear()
+                        .Select(x => new EntityAndEvent(entity, x)));
+                }
 
                 shouldRunAgain = false;
-                foreach (var domainEvent in eventsToRun)
+                foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    _findRunHandlers.DispatchBeforeSave(domainEvent);
+                    _findRunHandlers.DispatchBeforeSave(entityAndEvent);
                 }
             } while (shouldRunAgain);
         }
@@ -65,26 +68,34 @@ namespace GenericEventRunner.ForHandlers
             bool shouldRunAgain;
             do
             {
-                var eventsToRun = getTrackedEntities.Invoke()
-                    .SelectMany(x => x.Entity.GetBeforeSaveEventsThenClear())
-                    .ToList();
+                var eventsToRun = new List<EntityAndEvent>();
+                foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
+                {
+                    eventsToRun.AddRange(entity.GetBeforeSaveEventsThenClear()
+                        .Select(x => new EntityAndEvent(entity, x)));
+                }
 
                 shouldRunAgain = false;
-                foreach (var domainEvent in eventsToRun)
+                foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    await _findRunHandlers.DispatchBeforeSaveAsync(domainEvent);
+                    _findRunHandlers.DispatchBeforeSave(entityAndEvent);
                 }
             } while (shouldRunAgain);
         }
 
         private void RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
         {
-            var eventsToRun = getTrackedEntities.Invoke()
-                .SelectMany(x => x.Entity.GetBeforeSaveEventsThenClear());
-            foreach (var domainEvent in eventsToRun)
+            var eventsToRun = new List<EntityAndEvent>();
+            foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
+            {
+                eventsToRun.AddRange(entity.GetAfterSaveEventsThenClear()
+                    .Select(x => new EntityAndEvent(entity, x)));
+            }
+
+            foreach (var entityAndEvent in eventsToRun)
             { 
-                _findRunHandlers.DispatchAfterSave(domainEvent);
+                _findRunHandlers.DispatchAfterSave(entityAndEvent);
             }
         }
 
