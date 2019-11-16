@@ -6,7 +6,7 @@ using GenericEventRunner.ForEntities;
 
 namespace EntityClasses
 {
-    public class ProductStock : EntityEvents
+    public class ProductStock 
     {
         public ProductStock(Guid productCode, int numInStock)
         {
@@ -15,10 +15,10 @@ namespace EntityClasses
             NumAllocated = 0;
         }
 
-        public Guid ProductCode { get; private set; }
+        public Guid ProductCode { get; set; }
 
-        public int NumInStock { get; private set; }
+        public int NumInStock { get; set; }
 
-        public int NumAllocated { get; private set; }
+        public int NumAllocated { get; set; }
     }
 }

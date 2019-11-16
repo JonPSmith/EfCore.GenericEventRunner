@@ -8,11 +8,14 @@ namespace EntityClasses.DomainEvents
 {
     public class OrderDispatchedEvent : IDomainEvent
     {
-        public OrderDispatchedEvent(int orderId)
+        public OrderDispatchedEvent(DateTime actualDispatchDate, Action<decimal> setTaxRatePercent)
         {
-            OrderId = orderId;
+            ActualDispatchDate = actualDispatchDate;
+            SetTaxRatePercent = setTaxRatePercent;
         }
 
-        public int OrderId { get; }
+        public DateTime ActualDispatchDate { get; }
+
+        public Action<decimal> SetTaxRatePercent { get; }
     }
 }
