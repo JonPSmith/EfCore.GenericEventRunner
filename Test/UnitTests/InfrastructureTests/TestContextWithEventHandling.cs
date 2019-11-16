@@ -62,7 +62,7 @@ namespace Test.UnitTests.InfrastructureTests
 
                 //VERIFY
                 order.TotalPriceNoTax.ShouldEqual(2 * 123);
-                order.TaxRatePercent.ShouldEqual(9);
+                order.TaxRatePercent.ShouldEqual(4);
                 order.GrandTotalPrice.ShouldEqual(order.TotalPriceNoTax * (1 + order.TaxRatePercent / 100));
             }
         }

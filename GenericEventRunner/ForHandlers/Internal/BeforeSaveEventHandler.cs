@@ -15,7 +15,7 @@ namespace GenericEventRunner.ForHandlers.Internal
     {
         private readonly IBeforeSaveEventHandler<T> _handler;
 
-        public BeforeSaveHandler(EntityEvents callingEntity, IBeforeSaveEventHandler<T> handler)
+        public BeforeSaveHandler(IBeforeSaveEventHandler<T> handler)
         {
             _handler = handler;
         }
