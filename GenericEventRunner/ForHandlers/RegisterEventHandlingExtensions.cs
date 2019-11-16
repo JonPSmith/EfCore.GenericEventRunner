@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GenericEventRunner.ForHandlers
 {
-    public static class RegisterDomainEventsExtension
+    public static class RegisterEventHandlingExtensions
     {
         public static void RegisterEventHandlers(this IServiceCollection services, Assembly assemblyToScan = null)
         {

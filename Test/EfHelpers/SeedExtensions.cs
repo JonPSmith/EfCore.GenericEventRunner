@@ -10,6 +10,13 @@ namespace Test.EfHelpers
 {
     public static class SeedExtensions
     {
+
+        public static List<ProductStock> SeedTaxAndStock(this ExampleDbContext context)
+        {
+            context.SeedTwoTaxRates();
+            return context.SeedExampleProductStock();
+        }
+
         public static List<ProductStock> SeedExampleProductStock(this ExampleDbContext context)
         {
             var prodStocks = new List<ProductStock>
@@ -21,6 +28,14 @@ namespace Test.EfHelpers
             context.AddRange(prodStocks);
             context.SaveChanges();
             return prodStocks;
+        }
+
+        public static void SeedTwoTaxRates(this ExampleDbContext context)
+        {
+            var rateNow = new TaxRate(DateTime.Today, 4);
+            var rate2Days = new TaxRate(DateTime.Today.AddDays(2), 9);
+            context.AddRange(rateNow, rate2Days);
+            context.SaveChanges();
         }
     }
 }

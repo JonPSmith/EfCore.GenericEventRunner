@@ -1,12 +1,8 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using System;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using DataLayer;
-using EntityClasses;
-using GenericEventRunner.ForEntities;
 using Test.EfHelpers;
 using TestSupport.EfHelpers;
 using Xunit;
@@ -17,7 +13,7 @@ namespace Test.UnitTests.DataLayerTests
     public class TestExampleDbContextNoEvents
     {
         [Fact]
-        public void TestCreateDatabaseAndSeedProductStock()
+        public void TestCreateDatabaseSeedTaxAndStock()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
@@ -26,9 +22,10 @@ namespace Test.UnitTests.DataLayerTests
 
                 //ATTEMPT
                 context.Database.EnsureCreated();
-                context.SeedExampleProductStock();
+                context.SeedTaxAndStock();
 
                 //VERIFY
+                context.TaxRates.Count().ShouldEqual(2);
                 context.ProductStocks.Count().ShouldEqual(3);
             }
         }

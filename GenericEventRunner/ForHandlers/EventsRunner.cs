@@ -34,7 +34,7 @@ namespace GenericEventRunner.ForHandlers
             Func<Task<int>> callBaseSaveChangesAsync)
         {
             RunBeforeSaveChangesEvents(getTrackedEntities);
-            var numChanges = await callBaseSaveChangesAsync.Invoke();
+            var numChanges = await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false);
             RunAfterSaveChangesEvents(getTrackedEntities);
             return numChanges;
         }
