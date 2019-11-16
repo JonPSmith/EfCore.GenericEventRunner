@@ -6,15 +6,13 @@ using GenericEventRunner.ForEntities;
 
 namespace EntityClasses.DomainEvents
 {
-    public class DispatchedProductEvent : IDomainEvent
+    public class OrderDispatchedEvent : IDomainEvent
     {
-        public DispatchedProductEvent(Guid productCode, int numOrdered)
+        public OrderDispatchedEvent(int orderId)
         {
-            ProductCode = productCode;
-            NumOrdered = numOrdered;
+            OrderId = orderId;
         }
 
-        public Guid ProductCode { get; }
-        public int NumOrdered { get; }
+        public int OrderId { get; }
     }
 }

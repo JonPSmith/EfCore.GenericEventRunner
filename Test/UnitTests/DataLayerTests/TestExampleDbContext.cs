@@ -33,24 +33,5 @@ namespace Test.UnitTests.DataLayerTests
             }
         }
 
-        [Fact]
-        public void TestIdentity()
-        {
-            //SETUP
-            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            using (var context = new ExampleDbContext(options))
-            {
-                context.Database.EnsureCreated();
-                context.SeedExampleProductStock();
-
-                //ATTEMPT
-                var entity = context.ChangeTracker.Entries<EntityEvents>().First().Entity;
-
-                //VERIFY
-
-                
-            }
-        }
-
     }
 }

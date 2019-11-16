@@ -9,7 +9,7 @@ namespace EntityClasses.SupportClasses
     {
         public Guid ProductCode { get; set; }
 
-        public double ProductPrice { get; set; }
+        public decimal ProductPrice { get; set; }
         public int NumOrdered { get; set; }
     }
 }

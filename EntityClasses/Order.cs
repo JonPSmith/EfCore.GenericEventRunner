@@ -19,11 +19,32 @@ namespace EntityClasses
 
         //The date we expect to dispatch the order
         public DateTime DispatchDate { get; private set; }
+        public decimal TotalPriceNoTax { get; private set; }
 
+        private decimal _taxRatePercent;
         //Price and tax 
-        public double TotalPriceNoTax { get; private set; }
-        public double TaxRatePercent { get; private set; }
-        public double GrandTotalPrice { get; private set; } //= TotalPriceNoTax * (1 + TaxRatePercent/100) 
+        public decimal TaxRatePercent
+        {
+            get => _taxRatePercent;
+            private set
+            {
+                if (value != _taxRatePercent)
+                    AddEvent(new TaxRateChangedEvent(value, RefreshGrandTotalPrice));
+                _taxRatePercent = value;
+            }
+        }
+
+        private void SetTaxRatePercent(decimal newValue)
+        {
+            TaxRatePercent = newValue;
+        }
+
+        public decimal GrandTotalPrice { get; private set; } // should be set by RefreshGrandTotalPrice method
+
+        private void RefreshGrandTotalPrice()
+        {
+            GrandTotalPrice = TotalPriceNoTax * (1 + TaxRatePercent / 100);
+        }
 
         //----------------------------------------------
         //Relationships 
@@ -32,10 +53,11 @@ namespace EntityClasses
 
         private Order() { } //For EF Core
 
-        public Order(string userId, DateTime dispatchDate, ICollection<BasketItemDto> orderLines)
+        public Order(string userId, DateTime expectedDispatchDate, ICollection<BasketItemDto> orderLines)
         {
             UserId = userId;
-            DispatchDate = dispatchDate;
+            DispatchDate = expectedDispatchDate;
+            AddEvent(new OrderCreatedEvent(expectedDispatchDate, SetTaxRatePercent));
 
             var lineNum = 1;
             _LineItems = new HashSet<LineItem>(orderLines
@@ -51,18 +73,12 @@ namespace EntityClasses
 
         public void OrderHasBeenDispatched(DateTime newDispatchDate)
         {
-            if (_LineItems == null)
-                throw new ApplicationException("This method requires the LineItems to be included.");
+            if (OrderId == 0)
+                throw new InvalidOperationException("You cannot call this method until the Order is written to the database.");
 
             DispatchDate = newDispatchDate;
-            foreach (var lineItem in _LineItems)
-            {
-                AddEvent(new DispatchedProductEvent(lineItem.ProductCode, lineItem.NumOrdered));
-            }
+            AddEvent(new OrderDispatchedEvent(OrderId), EventToSend.Both);
         }
-
-        //--------------------------------------------------
-        //private methods
 
     }
 }
