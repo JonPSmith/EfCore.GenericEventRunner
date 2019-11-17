@@ -24,7 +24,7 @@ namespace GenericEventRunner.ForHandlers
         public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, GenericEventRunnerConfig config = null)
         {
             _config = config ?? new GenericEventRunnerConfig();
-            _logger = logger ?? new NullLogger<EventsRunner>();
+            _logger = logger;
             _findRunHandlers = new FindRunHandlers(serviceProvider, _logger, _config);
         }
 

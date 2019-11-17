@@ -128,6 +128,36 @@ namespace Test.UnitTests.InfrastructureTests
             }
         }
 
+        [Fact]
+        public void TestOrderDispatchedHandlerLogs()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers(logs);
+            {
+                var itemDto = new BasketItemDto
+                {
+                    ProductCode = context.ProductStocks.First().ProductCode,
+                    NumOrdered = 2,
+                    ProductPrice = 123
+                };
+                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
+                context.Add(order);
+                context.SaveChanges();
+
+                //ATTEMPT
+                order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
+                context.SaveChanges();
+
+                //VERIFY
+                logs.Count.ShouldEqual(3);
+                logs[0].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
+                logs[1].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
+                logs[2].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+            }
+        }
+
         private class EventWithNoHandler : IDomainEvent
         {
         }
