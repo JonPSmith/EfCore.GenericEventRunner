@@ -124,7 +124,7 @@ namespace Test.UnitTests.InfrastructureTests
 
                 //ATTEMPT
                 order.AddEvent(new EventWithNoHandler());
-                var ex = Assert.Throws<NoEventHandlerFoundException>(() => context.SaveChanges());
+                var ex = Assert.Throws<GenericEventRunnerException>(() => context.SaveChanges());
 
                 //VERIFY
                 ex.Message.ShouldEqual($"Could not find a BeforeSave event handler for the event {typeof(EventWithNoHandler).Name}.");

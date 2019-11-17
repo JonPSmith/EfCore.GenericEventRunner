@@ -31,7 +31,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                 .Select(handler => (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler)).ToList();
 
             if (!wrappedHandlers.Any())
-                throw new NoEventHandlerFoundException($"Could not find a BeforeSave event handler for the event {eventType.Name}.", 
+                throw new GenericEventRunnerException($"Could not find a BeforeSave event handler for the event {eventType.Name}.", 
                     entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
 
             foreach (var handler in wrappedHandlers)
@@ -53,7 +53,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                 .Select(handler => (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler)).ToList();
 
             if (!wrappedHandlers.Any())
-                throw new NoEventHandlerFoundException($"Could not find a BeforeSave event handler for the event {eventType.Name}.",
+                throw new GenericEventRunnerException($"Could not find a BeforeSave event handler for the event {eventType.Name}.",
                     entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
 
             foreach (var handler in wrappedHandlers)
@@ -75,7 +75,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                 .Select(handler => (AfterSaveEventHandler)Activator.CreateInstance(wrapperType, handler)).ToList();
 
             if (!wrappedHandlers.Any())
-                throw new NoEventHandlerFoundException($"Could not find an AfterSave event handler for the event {eventType.Name}.",
+                throw new GenericEventRunnerException($"Could not find an AfterSave event handler for the event {eventType.Name}.",
                     entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
 
             foreach (var handler in wrappedHandlers)
