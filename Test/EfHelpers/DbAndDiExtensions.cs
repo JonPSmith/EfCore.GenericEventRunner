@@ -5,6 +5,7 @@ using System.Reflection;
 using DataLayer;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers;
+using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ namespace Test.EfHelpers
         public static ExampleDbContext CreateDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options)
         {
             var services = new ServiceCollection();
+            services.AddLogging();
             services.RegisterEventRunner();
             services.RegisterEventHandlers(Assembly.GetAssembly(typeof(OrderCreatedHandler)));
             services.AddScoped(x =>

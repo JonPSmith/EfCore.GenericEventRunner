@@ -8,17 +8,24 @@ using System.Threading.Tasks;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers.Internal;
+using GenericEventRunner.ForSetup;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace GenericEventRunner.ForHandlers
 {
     public class EventsRunner : IEventsRunner
     {
         private readonly FindRunHandlers _findRunHandlers;
+        private readonly ILogger _logger;
+        private readonly GenericEventRunnerConfig _config;
 
-        public EventsRunner(IServiceProvider serviceProvider)
+        public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, GenericEventRunnerConfig config = null)
         {
-            _findRunHandlers = new FindRunHandlers(serviceProvider);
+            _config = config ?? new GenericEventRunnerConfig();
+            _logger = logger ?? new NullLogger<EventsRunner>();
+            _findRunHandlers = new FindRunHandlers(serviceProvider, _logger, _config);
         }
 
         public int RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
@@ -44,6 +51,7 @@ namespace GenericEventRunner.ForHandlers
         {
             //This has to run until there are no new events, because one event might trigger another event
             bool shouldRunAgain;
+            int numTimesAround = 0;
             do
             {
                 var eventsToRun = new List<EntityAndEvent>();
@@ -57,8 +65,13 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    _findRunHandlers.DispatchBeforeSave(entityAndEvent);
+                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, true);
                 }
+                if (++numTimesAround > _config.MaxTimesToLookForBeforeEvents)
+                    throw new GenericEventRunnerException(
+                        $"The BeforeSave event loop exceeded the config's {nameof(GenericEventRunnerConfig.MaxTimesToLookForBeforeEvents)}" +
+                        $" value of {_config.MaxTimesToLookForBeforeEvents}. This implies a circular sets of events.",
+                        eventsToRun.Last().CallingEntity, eventsToRun.Last().DomainEvent);
             } while (shouldRunAgain);
         }
 
@@ -79,7 +92,7 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    _findRunHandlers.DispatchBeforeSave(entityAndEvent);
+                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, true);
                 }
             } while (shouldRunAgain);
         }
@@ -95,7 +108,7 @@ namespace GenericEventRunner.ForHandlers
 
             foreach (var entityAndEvent in eventsToRun)
             { 
-                _findRunHandlers.DispatchAfterSave(entityAndEvent);
+                _findRunHandlers.RunHandlersForEvent(entityAndEvent, false);
             }
         }
 

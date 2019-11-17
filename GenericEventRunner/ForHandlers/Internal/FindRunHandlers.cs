@@ -2,87 +2,60 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.ForSetup;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
     internal class FindRunHandlers
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger _logger;
+        private readonly GenericEventRunnerConfig _config;
 
-        public FindRunHandlers(IServiceProvider serviceProvider)
+        public FindRunHandlers(IServiceProvider serviceProvider, ILogger logger, GenericEventRunnerConfig config)
         {
             _serviceProvider = serviceProvider;
+            _logger = logger;
+            _config = config;
         }
+
 
         /// <summary>
-        /// This finds and runs all the sync BeforeSave handlers built to take this domain event 
+        /// This finds the handlers for the event and runs the handlers with the input event
         /// </summary>
         /// <param name="entityAndEvent"></param>
-        public void DispatchBeforeSave(EntityAndEvent entityAndEvent)
+        /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
+        public void RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave)
         {
             var eventType = entityAndEvent.DomainEvent.GetType();
-            var handlerInterface = typeof(IBeforeSaveEventHandler<>).MakeGenericType(eventType);
-            var wrapperType = typeof(BeforeSaveHandler<>).MakeGenericType(eventType);
-            var wrappedHandlers = _serviceProvider.GetServices(handlerInterface)
-                .Select(handler => (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler)).ToList();
+            var handlerInterface = (beforeSave ? typeof(IBeforeSaveEventHandler<>) : typeof(IAfterSaveEventHandler<>))
+                .MakeGenericType(eventType);
+            var wrapperType = (beforeSave ? typeof(BeforeSaveHandler<>) : typeof(AfterSaveHandler<>))
+                .MakeGenericType(eventType);
+            var handlers = _serviceProvider.GetServices(handlerInterface).ToList();
 
-            if (!wrappedHandlers.Any())
-                throw new GenericEventRunnerException($"Could not find a BeforeSave event handler for the event {eventType.Name}.", 
-                    entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-
-            foreach (var handler in wrappedHandlers)
+            if (!handlers.Any())
             {
-                handler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
+                _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.");
+                if (!_config.DoNotThrowExceptionIfNoHandlerForAnEvent)
+                    throw new GenericEventRunnerException(
+                        $"Could not find a {beforeAfter} event handler for the event {eventType.Name}.",
+                        entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+            }
+
+            foreach (var handler in handlers)
+            {
+                _logger.LogInformation($"About to run event handler {handler.GetType().FullName}.");
+                var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
+                wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
             }
         }
-
-        /// <summary>
-        /// This finds and runs all the sync and async BeforeSave handlers built to take this domain event 
-        /// </summary>
-        /// <param name="entityAndEvent"></param>
-        public async Task DispatchBeforeSaveAsync(EntityAndEvent entityAndEvent)
-        {
-            var eventType = entityAndEvent.DomainEvent.GetType();
-            var handlerInterface = typeof(IBeforeSaveEventHandler<>).MakeGenericType(eventType);
-            var wrapperType = typeof(BeforeSaveHandler<>).MakeGenericType(eventType);
-            var wrappedHandlers = _serviceProvider.GetServices(handlerInterface)
-                .Select(handler => (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler)).ToList();
-
-            if (!wrappedHandlers.Any())
-                throw new GenericEventRunnerException($"Could not find a BeforeSave event handler for the event {eventType.Name}.",
-                    entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-
-            foreach (var handler in wrappedHandlers)
-            {
-                handler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-            }
-        }
-
-        /// <summary>
-        /// This finds and runs all the AfterSave handlers built to take this domain event 
-        /// </summary>
-        /// <param name="entityAndEvent"></param>
-        public void DispatchAfterSave(EntityAndEvent entityAndEvent)
-        {
-            var eventType = entityAndEvent.DomainEvent.GetType();
-            var handlerInterface = typeof(IAfterSaveEventHandler<>).MakeGenericType(eventType);
-            var wrapperType = typeof(AfterSaveHandler<>).MakeGenericType(eventType);
-            var wrappedHandlers = _serviceProvider.GetServices(handlerInterface)
-                .Select(handler => (AfterSaveEventHandler)Activator.CreateInstance(wrapperType, handler)).ToList();
-
-            if (!wrappedHandlers.Any())
-                throw new GenericEventRunnerException($"Could not find an AfterSave event handler for the event {eventType.Name}.",
-                    entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-
-            foreach (var handler in wrappedHandlers)
-            {
-                handler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-            }
-        }
-
+        
     }
 }

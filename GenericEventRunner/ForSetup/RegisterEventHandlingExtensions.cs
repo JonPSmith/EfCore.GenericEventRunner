@@ -6,9 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using GenericEventRunner.ForDbContext;
+using GenericEventRunner.ForHandlers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GenericEventRunner.ForHandlers
+namespace GenericEventRunner.ForSetup
 {
     public static class RegisterEventHandlingExtensions
     {

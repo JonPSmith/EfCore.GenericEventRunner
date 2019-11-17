@@ -11,6 +11,7 @@ using EntityClasses.DomainEvents;
 using EntityClasses.SupportClasses;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers;
+using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Microsoft.Extensions.DependencyInjection;
 using Test.EfHelpers;
