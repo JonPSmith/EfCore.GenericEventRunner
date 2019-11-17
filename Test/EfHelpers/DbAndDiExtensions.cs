@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
+using System.Collections.Generic;
 using System.Reflection;
 using DataLayer;
 using GenericEventRunner.ForDbContext;
@@ -9,14 +10,18 @@ using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using TestSupport.EfHelpers;
 
 namespace Test.EfHelpers
 {
     public static class DbAndDiExtensions
     {
-        public static ExampleDbContext CreateAndSeedDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options)
+        public static ExampleDbContext CreateAndSeedDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options,
+            List<LogOutput> logs = null)
         {
-            var context = CreateDbWithDiForHandlers(options);
+            var context = options.CreateDbWithDiForHandlers(logs);
 
             context.Database.EnsureCreated();
             context.SeedTaxAndStock();
@@ -24,10 +29,14 @@ namespace Test.EfHelpers
             return context;
         }
 
-        public static ExampleDbContext CreateDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options)
+        public static ExampleDbContext CreateDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options,
+            List<LogOutput> logs = null)
         {
             var services = new ServiceCollection();
-            services.AddLogging();
+            if (logs != null)
+            {
+                services.AddSingleton<ILogger<EventsRunner>>(new Logger<EventsRunner>(new LoggerFactory(new[] { new MyLoggerProvider(logs) })));
+            }
             services.RegisterEventRunner();
             services.RegisterEventHandlers(Assembly.GetAssembly(typeof(OrderCreatedHandler)));
             services.AddScoped(x =>

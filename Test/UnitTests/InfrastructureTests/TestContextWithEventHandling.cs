@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using DataLayer;
 using EntityClasses;
 using EntityClasses.DomainEvents;
@@ -68,6 +67,34 @@ namespace Test.UnitTests.InfrastructureTests
                 order.TaxRatePercent.ShouldEqual(4);
                 order.GrandTotalPrice.ShouldEqual(order.TotalPriceNoTax * (1 + order.TaxRatePercent / 100));
                 context.ProductStocks.First().NumAllocated.ShouldEqual(2);
+            }
+        }
+
+        [Fact]
+        public void TestOrderCreatedHandlerLogs()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers(logs);
+            {
+                var itemDto = new BasketItemDto
+                {
+                    ProductCode = context.ProductStocks.First().ProductCode,
+                    NumOrdered = 2,
+                    ProductPrice = 123
+                };
+
+                //ATTEMPT
+                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
+                context.Add(order);
+                context.SaveChanges();
+
+                //VERIFY
+                logs.Count.ShouldEqual(3);
+                logs[0].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
+                logs[1].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
+                logs[2].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
             }
         }
 
