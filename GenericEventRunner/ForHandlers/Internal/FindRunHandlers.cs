@@ -39,9 +39,9 @@ namespace GenericEventRunner.ForHandlers.Internal
                 .MakeGenericType(eventType);
             var handlers = _serviceProvider.GetServices(handlerInterface).ToList();
 
+            var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
             if (!handlers.Any())
             {
-                var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
                 _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.");
                 if (!_config.DoNotThrowExceptionIfNoHandlerForAnEvent)
                     throw new GenericEventRunnerException(
@@ -51,7 +51,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 
             foreach (var handler in handlers)
             {
-                _logger.LogInformation($"About to run event handler {handler.GetType().FullName}.");
+                _logger.LogInformation($"About to run a {beforeAfter} event handler {handler.GetType().FullName}.");
                 if (beforeSave)
                 {
                     var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
