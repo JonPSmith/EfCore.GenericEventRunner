@@ -10,8 +10,4 @@
     <ProjectReference Include="..\GenericEventRunner\GenericEventRunner.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="AfterEventHandlers\" />
-  </ItemGroup>
-
 </Project>

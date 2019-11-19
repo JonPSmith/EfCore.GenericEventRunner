@@ -28,7 +28,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.First().ProductCode,
+                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -52,7 +52,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.First().ProductCode,
+                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -66,7 +66,7 @@ namespace Test.UnitTests.InfrastructureTests
                 order.TotalPriceNoTax.ShouldEqual(2 * 123);
                 order.TaxRatePercent.ShouldEqual(4);
                 order.GrandTotalPrice.ShouldEqual(order.TotalPriceNoTax * (1 + order.TaxRatePercent / 100));
-                context.ProductStocks.First().NumAllocated.ShouldEqual(2);
+                context.ProductStocks.OrderBy(x => x.NumInStock).First().NumAllocated.ShouldEqual(2);
             }
         }
 
@@ -80,7 +80,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.First().ProductCode,
+                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -107,7 +107,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.First().ProductCode,
+                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -123,8 +123,8 @@ namespace Test.UnitTests.InfrastructureTests
                 order.TotalPriceNoTax.ShouldEqual(2 * 123);
                 order.TaxRatePercent.ShouldEqual(9);
                 order.GrandTotalPrice.ShouldEqual(order.TotalPriceNoTax * (1 + order.TaxRatePercent / 100));
-                context.ProductStocks.First().NumAllocated.ShouldEqual(0);
-                context.ProductStocks.First().NumInStock.ShouldEqual(3);
+                context.ProductStocks.OrderBy(x => x.NumInStock).First().NumAllocated.ShouldEqual(0);
+                context.ProductStocks.OrderBy(x => x.NumInStock).First().NumInStock.ShouldEqual(3);
             }
         }
 
@@ -138,13 +138,14 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.First().ProductCode,
+                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
                 var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
                 context.Add(order);
                 context.SaveChanges();
+                logs.Clear();
 
                 //ATTEMPT
                 order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
@@ -152,9 +153,9 @@ namespace Test.UnitTests.InfrastructureTests
 
                 //VERIFY
                 logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
-                logs[1].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
-                logs[2].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[0].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
+                logs[1].Message.ShouldEqual("About to run event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[2].Message.ShouldEqual("About to run event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
             }
         }
 
@@ -162,8 +163,10 @@ namespace Test.UnitTests.InfrastructureTests
         {
         }
 
-        [Fact]
-        public void TestMissingHandlerThrowsException()
+        [Theory]
+        [InlineData(EventToSend.Before)]
+        [InlineData(EventToSend.After)]
+        public void TestMissingHandlerThrowsException(EventToSend beforeAfter)
         {
 
             //SETUP
@@ -172,7 +175,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.First().ProductCode,
+                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -180,11 +183,13 @@ namespace Test.UnitTests.InfrastructureTests
                 context.Add(order);
 
                 //ATTEMPT
-                order.AddEvent(new EventWithNoHandler());
+                order.AddEvent(new EventWithNoHandler(), beforeAfter);
                 var ex = Assert.Throws<GenericEventRunnerException>(() => context.SaveChanges());
 
                 //VERIFY
-                ex.Message.ShouldEqual($"Could not find a BeforeSave event handler for the event {typeof(EventWithNoHandler).Name}.");
+                ex.Message.ShouldEqual(beforeAfter == EventToSend.Before
+                    ? $"Could not find a BeforeSave event handler for the event {typeof(EventWithNoHandler).Name}."
+                    : $"Could not find a AfterSave event handler for the event {typeof(EventWithNoHandler).Name}.");
             }
         }
 

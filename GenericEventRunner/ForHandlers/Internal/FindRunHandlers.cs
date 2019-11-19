@@ -52,8 +52,16 @@ namespace GenericEventRunner.ForHandlers.Internal
             foreach (var handler in handlers)
             {
                 _logger.LogInformation($"About to run event handler {handler.GetType().FullName}.");
-                var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
-                wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                if (beforeSave)
+                {
+                    var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
+                    wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                }
+                else
+                {
+                    var wrappedHandler = (AfterSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
+                    wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                }
             }
         }
         

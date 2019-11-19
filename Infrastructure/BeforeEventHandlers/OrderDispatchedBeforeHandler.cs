@@ -11,12 +11,12 @@ using Infrastructure.BeforeEventHandlers.Internal;
 
 namespace Infrastructure.BeforeEventHandlers
 {
-    public class OrderDispatchedHandler : IBeforeSaveEventHandler<OrderDispatchedEvent>
+    public class OrderDispatchedBeforeHandler : IBeforeSaveEventHandler<OrderDispatchedEvent>
     {
         private readonly ExampleDbContext _context;
         private readonly TaxRateLookup _rateFinder;
 
-        public OrderDispatchedHandler(ExampleDbContext context)
+        public OrderDispatchedBeforeHandler(ExampleDbContext context)
         {
             _context = context;
             _rateFinder = new TaxRateLookup(context);
