@@ -3,15 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEventRunner", "GenericEventRunner\GenericEventRunner.csproj", "{4F20200E-71FC-40FB-9E29-571081A50BC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenericEventRunner", "GenericEventRunner\GenericEventRunner.csproj", "{4F20200E-71FC-40FB-9E29-571081A50BC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntityClasses", "EntityClasses\EntityClasses.csproj", "{D48D1BDB-6AB3-4A4D-88D6-0477CD9241B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EntityClasses", "EntityClasses\EntityClasses.csproj", "{D48D1BDB-6AB3-4A4D-88D6-0477CD9241B9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataLayer", "DataLayer\DataLayer.csproj", "{FA7550E5-9D97-46BF-B6E5-3A65C4AD9433}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataLayer", "DataLayer\DataLayer.csproj", "{FA7550E5-9D97-46BF-B6E5-3A65C4AD9433}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{6EFA5E3F-2A46-4AC5-B636-A40D9CF40DB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{6EFA5E3F-2A46-4AC5-B636-A40D9CF40DB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{2DB798EC-BC1A-496B-82C1-9542E34AA1E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{2DB798EC-BC1A-496B-82C1-9542E34AA1E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DC1820DB-E4BC-4D89-91E3-12743A3A7C06}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

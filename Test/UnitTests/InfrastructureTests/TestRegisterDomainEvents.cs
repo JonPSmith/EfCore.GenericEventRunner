@@ -1,22 +1,15 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using DataLayer;
-using EntityClasses;
 using EntityClasses.DomainEvents;
-using EntityClasses.SupportClasses;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Microsoft.Extensions.DependencyInjection;
-using Test.EfHelpers;
 using Test.Helpers;
-using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
 
