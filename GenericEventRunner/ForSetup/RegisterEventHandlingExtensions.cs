@@ -13,14 +13,18 @@ namespace GenericEventRunner.ForSetup
 {
     public static class RegisterEventHandlingExtensions
     {
-        public static void RegisterEventHandlers(this IServiceCollection services, Assembly assemblyToScan = null)
+        public static void RegisterEventHandlers(this IServiceCollection services, params Assembly[] assembliesToScan)
         {
-            var assembly = assemblyToScan ?? Assembly.GetExecutingAssembly();
+            if (!assembliesToScan.Any())
+                assembliesToScan = new Assembly[]{ Assembly.GetExecutingAssembly()};
 
-            var eventHandlersToRegister =
-                ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandler<>), assembly).ToList();
-            eventHandlersToRegister
-                .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandler<>), assembly));
+            var eventHandlersToRegister = new List<(Type classType, Type interfaceType)>();
+            foreach (var assembly in assembliesToScan)
+            {
+                eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandler<>), assembly));
+                eventHandlersToRegister
+                    .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandler<>), assembly));
+            }
 
             foreach (var classAndInterface in eventHandlersToRegister)
             {

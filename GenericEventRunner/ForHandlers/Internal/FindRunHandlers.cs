@@ -57,7 +57,9 @@ namespace GenericEventRunner.ForHandlers.Internal
                 if (beforeSave)
                 {
                     var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
-                    status.CombineStatuses( wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent));
+                    var handlerStatus = wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    if (handlerStatus != null)
+                        status.CombineStatuses(handlerStatus);
                 }
                 else
                 {

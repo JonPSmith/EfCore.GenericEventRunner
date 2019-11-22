@@ -84,6 +84,15 @@ namespace GenericEventRunner.ForHandlers
                         eventsToRun.Last().CallingEntity, eventsToRun.Last().DomainEvent);
             } while (shouldRunAgain && status.IsValid);
 
+            if (!status.IsValid)
+                //If errors then clear any extra before/after events.
+                //We need to do this to ensure another call to SaveChanges doesn't get the old events
+                getTrackedEntities.Invoke().ToList().ForEach(x =>
+                {
+                    x.Entity.GetBeforeSaveEventsThenClear();
+                    x.Entity.GetAfterSaveEventsThenClear();
+                });
+
             return status;
         }
 

@@ -25,6 +25,7 @@ namespace Infrastructure.BeforeEventHandlers
 
         public IStatusGeneric Handle(EntityEvents callingEntity, OrderDispatchedEvent domainEvent)
         {
+            var status = new StatusGenericHandler();
             //Update the rate as the date may have changed
             domainEvent.SetTaxRatePercent(_rateFinder.GetTaxRateInEffect(domainEvent.ActualDispatchDate));
 
@@ -32,11 +33,14 @@ namespace Infrastructure.BeforeEventHandlers
             foreach (var lineItem in _context.LineItems.Where(x => x.OrderId == orderId))
             {
                 var stock = _context.Find<ProductStock>(lineItem.ProductName);
+                if (stock.NumInStock < lineItem.NumOrdered)
+                    return status.AddError(
+                        $"I could not dispatch this order because there wasn't enough {lineItem.ProductName} in stock.");
                 stock.NumAllocated -= lineItem.NumOrdered;
                 stock.NumInStock -= lineItem.NumOrdered;
             }
 
-            return new StatusGenericHandler();
+            return status;
         }
     }
 }

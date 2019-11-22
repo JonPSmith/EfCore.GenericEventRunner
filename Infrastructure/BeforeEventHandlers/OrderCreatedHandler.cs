@@ -25,7 +25,7 @@ namespace Infrastructure.BeforeEventHandlers
         {
             domainEvent.SetTaxRatePercent(_rateFinder.GetTaxRateInEffect(domainEvent.ExpectedDispatchDate));
 
-            return new StatusGenericHandler();
+            return null;
         }
     }
 }

@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Test.TestEventHandlers;
 using TestSupport.EfHelpers;
 
 namespace Test.EfHelpers
@@ -42,7 +43,9 @@ namespace Test.EfHelpers
                 services.AddSingleton<ILogger<EventsRunner>>(new NullLogger<EventsRunner>());
             }
             services.RegisterEventRunner();
-            services.RegisterEventHandlers(Assembly.GetAssembly(typeof(OrderCreatedHandler)));
+            services.RegisterEventHandlers(
+                Assembly.GetAssembly(typeof(OrderCreatedHandler)), 
+                Assembly.GetAssembly(typeof(BeforeHandlerCircularEvent)));
             services.AddScoped(x =>
                 new ExampleDbContext(options, x.GetRequiredService<IEventsRunner>()));
             var serviceProvider = services.BuildServiceProvider();

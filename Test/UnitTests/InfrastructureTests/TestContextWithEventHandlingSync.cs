@@ -11,13 +11,14 @@ using EntityClasses.SupportClasses;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
 using Test.EfHelpers;
+using Test.TestEventHandlers;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests.InfrastructureTests
 {
-    public class TestContextWithEventHandling
+    public class TestContextWithEventHandlingSync
     {
         [Fact]
         public void TestCreateOrderCheckEventsProduced()
@@ -240,6 +241,32 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 ex.Message.ShouldEqual(beforeAfter == EventToSend.Before
                     ? $"Could not find a BeforeSave event handler for the event {typeof(EventWithNoHandler).Name}."
                     : $"Could not find a AfterSave event handler for the event {typeof(EventWithNoHandler).Name}.");
+            }
+        }
+
+        [Fact]
+        public void TestCircularEventException()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var itemDto = new BasketItemDto
+                {
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
+                    NumOrdered = 2,
+                    ProductPrice = 123
+                };
+                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
+                context.Add(order);
+                context.SaveChanges();
+
+                //ATTEMPT
+                order.AddEvent(new EventCircularEvent());
+                var ex = Assert.Throws<GenericEventRunnerException>(() => context.SaveChanges());
+
+                //VERIFY
+                ex.Message.ShouldEqual("The BeforeSave event loop exceeded the config's MaxTimesToLookForBeforeEvents value of 6. This implies a circular sets of events.");
             }
         }
 
