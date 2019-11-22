@@ -216,18 +216,11 @@ I could not accept this order because there wasn't enough Product1 in stock.");
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var context = options.CreateAndSeedDbWithDiForHandlers();
             {
-                var itemDto = new BasketItemDto
-                {
-                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
-                    NumOrdered = 2,
-                    ProductPrice = 123
-                };
-                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
-                context.Add(order);
-                context.SaveChanges();
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
 
                 //ATTEMPT
-                order.AddEvent(new EventTestExceptionHandler());
+                tax.AddEvent(new EventTestBeforeExceptionHandler());
                 var ex = Assert.Throws<ApplicationException>(() => context.SaveChanges());
 
                 //VERIFY

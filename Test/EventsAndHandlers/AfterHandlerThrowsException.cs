@@ -4,13 +4,12 @@
 using System;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
-using StatusGeneric;
 
 namespace Test.EventsAndHandlers
 {
-    public class BeforeHandlerThrowsException : IBeforeSaveEventHandler<EventTestBeforeExceptionHandler>
+    public class AfterHandlerThrowsException : IAfterSaveEventHandler<EventTestAfterExceptionHandler>
     {
-        public IStatusGeneric Handle(EntityEvents callingEntity, EventTestBeforeExceptionHandler domainEvent)
+        public void Handle(EntityEvents callingEntity, EventTestAfterExceptionHandler domainEvent)
         {
             throw new ApplicationException(nameof(BeforeHandlerThrowsException));
         }

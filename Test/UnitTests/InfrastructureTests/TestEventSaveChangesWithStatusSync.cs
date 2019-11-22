@@ -10,7 +10,9 @@ using EntityClasses.DomainEvents;
 using EntityClasses.SupportClasses;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
+using GenericEventRunner.ForSetup;
 using Test.EfHelpers;
+using Test.EventsAndHandlers;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
@@ -167,6 +169,89 @@ namespace Test.UnitTests.InfrastructureTests
                 logs[0].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
                 logs[1].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
                 logs[2].Message.ShouldEqual("About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
+            }
+        }
+
+        [Fact]
+        public void TestBeforeHandlerThrowsExceptionTurnedIntoStatus()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestBeforeExceptionHandler());
+                var status = context.SaveChangesWithStatus();
+
+                //VERIFY
+                status.IsValid.ShouldBeFalse();
+                status.GetAllErrors().ShouldEqual("There was a system error. If this persists then please contact us.");
+            }
+        }
+
+        [Fact]
+        public void TestBeforeHandlerThrowsExceptionTurnedOnInConfig()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var config = new GenericEventRunnerConfig
+            {
+                TurnHandlerExceptionsToErrorStatus = false
+            };
+            var context = options.CreateAndSeedDbWithDiForHandlers(config: config);
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestBeforeExceptionHandler());
+                var ex = Assert.Throws<ApplicationException>(() => context.SaveChanges());
+
+                //VERIFY
+                ex.Message.ShouldEqual(nameof(BeforeHandlerThrowsException));
+            }
+        }
+
+        [Fact]
+        public void TestBeforeHandlerThrowsExceptionWithAttributeTurnedIntoStatus()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestExceptionHandlerWithAttribute());
+                var status = context.SaveChangesWithStatus();
+
+                //VERIFY
+                status.IsValid.ShouldBeFalse();
+                status.GetAllErrors().ShouldEqual("Attribute provided exception message");
+            }
+        }
+
+        [Fact]
+        public void TestAfterHandlerThrowsExceptionTurnedToMessage()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestAfterExceptionHandler(), EventToSend.After);
+                var status = context.SaveChangesWithStatus();
+
+                //VERIFY
+                status.IsValid.ShouldBeTrue();
+                status.Message.ShouldEqual("Successfully saved, but it failed to sent a update report.");
             }
         }
 
