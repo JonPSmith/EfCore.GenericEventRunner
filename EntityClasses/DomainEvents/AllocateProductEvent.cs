@@ -8,13 +8,13 @@ namespace EntityClasses.DomainEvents
 {
     public class AllocateProductEvent : IDomainEvent
     {
-        public AllocateProductEvent(Guid productCode, int numOrdered)
+        public AllocateProductEvent(string productName, int numOrdered)
         {
-            ProductCode = productCode;
+            ProductName = productName;
             NumOrdered = numOrdered;
         }
 
-        public Guid ProductCode { get; }
+        public string ProductName { get; }
         public int NumOrdered { get; }
     }
 }

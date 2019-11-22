@@ -28,7 +28,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -52,7 +52,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -71,6 +71,56 @@ namespace Test.UnitTests.InfrastructureTests
         }
 
         [Fact]
+        public void TestOrderCreatedHandlerNotEnoughStockStatus()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var itemDto = new BasketItemDto
+                {
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
+                    NumOrdered = 10,
+                    ProductPrice = 123
+                };
+
+                //ATTEMPT
+                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
+                context.Add(order);
+                var status = context.SaveChangesWithBeforeStatuses();
+
+                //VERIFY
+                status.IsValid.ShouldBeFalse();
+                status.GetAllErrors().ShouldEqual("I could not accept this order because there wasn't enough Product1 in stock.");
+            }
+        }
+
+        [Fact]
+        public void TestOrderCreatedHandlerExceptionNotEnoughStock()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var itemDto = new BasketItemDto
+                {
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
+                    NumOrdered = 10,
+                    ProductPrice = 123
+                };
+
+                //ATTEMPT
+                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
+                context.Add(order);
+                var ex = Assert.Throws<GenericEventRunnerException>(() => context.SaveChanges());
+
+                //VERIFY
+                ex.Message.ShouldEqual(@"Problem when writing to the database: Failed with 1 error
+I could not accept this order because there wasn't enough Product1 in stock.");
+            }
+        }
+
+        [Fact]
         public void TestOrderCreatedHandlerLogs()
         {
             //SETUP
@@ -80,7 +130,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -107,7 +157,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -138,7 +188,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };
@@ -175,7 +225,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 var itemDto = new BasketItemDto
                 {
-                    ProductCode = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductCode,
+                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
                     NumOrdered = 2,
                     ProductPrice = 123
                 };

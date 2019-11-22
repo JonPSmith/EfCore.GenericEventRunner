@@ -4,14 +4,17 @@
 using EntityClasses.DomainEvents;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
+using StatusGeneric;
 
 namespace Infrastructure.BeforeEventHandlers
 {
     public class TaxRateChangedHandler : IBeforeSaveEventHandler<TaxRateChangedEvent>
     {
-        public void Handle(EntityEvents callingEntity, TaxRateChangedEvent domainEvent)
+        public IStatusGeneric Handle(EntityEvents callingEntity, TaxRateChangedEvent domainEvent)
         {
             domainEvent.RefreshGrandTotalPrice();
+
+            return new StatusGenericHandler();
         }
     }
 }

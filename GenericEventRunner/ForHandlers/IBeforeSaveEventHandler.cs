@@ -2,11 +2,12 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using GenericEventRunner.ForEntities;
+using StatusGeneric;
 
 namespace GenericEventRunner.ForHandlers
 {
     public interface IBeforeSaveEventHandler<in T> where T : IDomainEvent
     {
-        void Handle(EntityEvents callingEntity, T domainEvent);
+        IStatusGeneric Handle(EntityEvents callingEntity, T domainEvent);
     }
 }

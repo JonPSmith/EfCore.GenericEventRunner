@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using GenericEventRunner.ForSetup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using StatusGeneric;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
@@ -24,14 +25,15 @@ namespace GenericEventRunner.ForHandlers.Internal
             _config = config;
         }
 
-
         /// <summary>
         /// This finds the handlers for the event and runs the handlers with the input event
         /// </summary>
         /// <param name="entityAndEvent"></param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
-        public void RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave)
+        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave)
         {
+            var status = new StatusGenericHandler();
+
             var eventType = entityAndEvent.DomainEvent.GetType();
             var handlerInterface = (beforeSave ? typeof(IBeforeSaveEventHandler<>) : typeof(IAfterSaveEventHandler<>))
                 .MakeGenericType(eventType);
@@ -55,7 +57,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                 if (beforeSave)
                 {
                     var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
-                    wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    status.CombineStatuses( wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent));
                 }
                 else
                 {
@@ -63,6 +65,8 @@ namespace GenericEventRunner.ForHandlers.Internal
                     wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                 }
             }
+
+            return status;
         }
         
     }

@@ -61,13 +61,13 @@ namespace EntityClasses
 
             var lineNum = 1;
             _LineItems = new HashSet<LineItem>(orderLines
-                .Select(x => new LineItem(lineNum++, x.ProductCode, x.ProductPrice, x.NumOrdered)));
+                .Select(x => new LineItem(lineNum++, x.ProductName, x.ProductPrice, x.NumOrdered)));
 
             TotalPriceNoTax = 0;
             foreach (var basketItem in orderLines)
             {
                 TotalPriceNoTax += basketItem.ProductPrice * basketItem.NumOrdered;
-                AddEvent(new AllocateProductEvent(basketItem.ProductCode, basketItem.NumOrdered));
+                AddEvent(new AllocateProductEvent(basketItem.ProductName, basketItem.NumOrdered));
             }
         }
 

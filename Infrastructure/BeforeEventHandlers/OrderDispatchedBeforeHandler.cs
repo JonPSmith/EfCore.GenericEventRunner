@@ -8,6 +8,7 @@ using EntityClasses.DomainEvents;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
 using Infrastructure.BeforeEventHandlers.Internal;
+using StatusGeneric;
 
 namespace Infrastructure.BeforeEventHandlers
 {
@@ -22,7 +23,7 @@ namespace Infrastructure.BeforeEventHandlers
             _rateFinder = new TaxRateLookup(context);
         }
 
-        public void Handle(EntityEvents callingEntity, OrderDispatchedEvent domainEvent)
+        public IStatusGeneric Handle(EntityEvents callingEntity, OrderDispatchedEvent domainEvent)
         {
             //Update the rate as the date may have changed
             domainEvent.SetTaxRatePercent(_rateFinder.GetTaxRateInEffect(domainEvent.ActualDispatchDate));
@@ -30,10 +31,12 @@ namespace Infrastructure.BeforeEventHandlers
             var orderId = ((Order) callingEntity).OrderId;
             foreach (var lineItem in _context.LineItems.Where(x => x.OrderId == orderId))
             {
-                var stock = _context.Find<ProductStock>(lineItem.ProductCode);
+                var stock = _context.Find<ProductStock>(lineItem.ProductName);
                 stock.NumAllocated -= lineItem.NumOrdered;
                 stock.NumInStock -= lineItem.NumOrdered;
             }
+
+            return new StatusGenericHandler();
         }
     }
 }

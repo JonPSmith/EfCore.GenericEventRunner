@@ -7,10 +7,10 @@ namespace EntityClasses
 {
     public class LineItem
     {
-        internal LineItem(int lineNum, Guid productCode, decimal productPrice, int numOrdered)
+        internal LineItem(int lineNum, string productName, decimal productPrice, int numOrdered)
         {
             LineNum = lineNum;
-            ProductCode = productCode;
+            ProductName = productName;
             ProductPrice = productPrice;
             NumOrdered = numOrdered;
         }
@@ -20,7 +20,7 @@ namespace EntityClasses
 
         public int LineNum { get; private set; }
 
-        public Guid ProductCode { get; private set; }
+        public string ProductName { get; private set; }
 
         public decimal ProductPrice { get; private set; }
 

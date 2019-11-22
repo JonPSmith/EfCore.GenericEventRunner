@@ -2,12 +2,13 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using GenericEventRunner.ForEntities;
+using StatusGeneric;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
     internal abstract class BeforeSaveEventHandler
     {
-        public abstract void Handle(EntityEvents callingEntity, IDomainEvent domainEvent);
+        public abstract IStatusGeneric Handle(EntityEvents callingEntity, IDomainEvent domainEvent);
     }
 
     internal class BeforeSaveHandler<T> : BeforeSaveEventHandler
@@ -20,9 +21,9 @@ namespace GenericEventRunner.ForHandlers.Internal
             _handler = handler;
         }
 
-        public override void Handle(EntityEvents callingEntity, IDomainEvent domainEvent)
+        public override IStatusGeneric Handle(EntityEvents callingEntity, IDomainEvent domainEvent)
         {
-            _handler.Handle(callingEntity, (T)domainEvent);
+            return _handler.Handle(callingEntity, (T)domainEvent);
         }
     }
 }

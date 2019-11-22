@@ -21,9 +21,9 @@ namespace Test.EfHelpers
         {
             var prodStocks = new List<ProductStock>
             {
-                new ProductStock(Guid.NewGuid(), 5),
-                new ProductStock(Guid.NewGuid(), 10),
-                new ProductStock(Guid.NewGuid(), 20),
+                new ProductStock("Product1", 5),
+                new ProductStock("Product2", 10),
+                new ProductStock("Product3", 20),
             };
             context.AddRange(prodStocks);
             context.SaveChanges();

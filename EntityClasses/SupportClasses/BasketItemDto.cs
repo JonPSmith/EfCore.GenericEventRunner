@@ -7,7 +7,7 @@ namespace EntityClasses.SupportClasses
 {
     public class BasketItemDto
     {
-        public Guid ProductCode { get; set; }
+        public string ProductName { get; set; }
 
         public decimal ProductPrice { get; set; }
         public int NumOrdered { get; set; }

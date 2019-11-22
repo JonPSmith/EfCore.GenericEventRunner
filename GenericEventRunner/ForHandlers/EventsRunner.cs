@@ -11,30 +11,36 @@ using GenericEventRunner.ForHandlers.Internal;
 using GenericEventRunner.ForSetup;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using StatusGeneric;
 
 namespace GenericEventRunner.ForHandlers
 {
+    /// <summary>
+    /// The EventsRunner has the lifetime of the DbContext, i.e. its Scoped
+    /// </summary>
     public class EventsRunner : IEventsRunner
     {
         private readonly FindRunHandlers _findRunHandlers;
-        private readonly ILogger _logger;
         private readonly GenericEventRunnerConfig _config;
 
         public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, GenericEventRunnerConfig config = null)
         {
             _config = config ?? new GenericEventRunnerConfig();
-            _logger = logger;
-            _findRunHandlers = new FindRunHandlers(serviceProvider, _logger, _config);
+            _findRunHandlers = new FindRunHandlers(serviceProvider, logger, _config);
         }
 
-        public int RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
+        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
             Func<int> callBaseSaveChanges)
         {
-            RunBeforeSaveChangesEvents(getTrackedEntities);
-            var numChanges = callBaseSaveChanges.Invoke();
+            var status = new StatusGenericHandler<int>();
+            status.CombineStatuses(RunBeforeSaveChangesEvents(getTrackedEntities));
+            if (!status.IsValid) 
+                return status;
+
+            status.Message = "Successfully saved";
+            status.SetResult(callBaseSaveChanges.Invoke());
             RunAfterSaveChangesEvents(getTrackedEntities);
-            return numChanges;
+            return status;
         }
 
         public async Task<int> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
@@ -47,8 +53,10 @@ namespace GenericEventRunner.ForHandlers
         }
 
 
-        private void RunBeforeSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        private IStatusGeneric RunBeforeSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
         {
+            var status = new StatusGenericHandler();
+
             //This has to run until there are no new events, because one event might trigger another event
             bool shouldRunAgain;
             int numTimesAround = 0;
@@ -65,14 +73,18 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, true);
+                    status.CombineStatuses( _findRunHandlers.RunHandlersForEvent(entityAndEvent, true));
+                    if (!status.IsValid)
+                        break;
                 }
                 if (++numTimesAround > _config.MaxTimesToLookForBeforeEvents)
                     throw new GenericEventRunnerException(
                         $"The BeforeSave event loop exceeded the config's {nameof(GenericEventRunnerConfig.MaxTimesToLookForBeforeEvents)}" +
                         $" value of {_config.MaxTimesToLookForBeforeEvents}. This implies a circular sets of events.",
                         eventsToRun.Last().CallingEntity, eventsToRun.Last().DomainEvent);
-            } while (shouldRunAgain);
+            } while (shouldRunAgain && status.IsValid);
+
+            return status;
         }
 
         private async Task RunBeforeSaveChangesEventsAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)

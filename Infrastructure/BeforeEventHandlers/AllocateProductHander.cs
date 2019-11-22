@@ -7,6 +7,7 @@ using EntityClasses;
 using EntityClasses.DomainEvents;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
+using StatusGeneric;
 
 namespace Infrastructure.BeforeEventHandlers
 {
@@ -19,13 +20,19 @@ namespace Infrastructure.BeforeEventHandlers
             _context = context;
         }
 
-        public void Handle(EntityEvents callingEntity, AllocateProductEvent domainEvent)
+        public IStatusGeneric Handle(EntityEvents callingEntity, AllocateProductEvent domainEvent)
         {
-            var stock = _context.Find<ProductStock>(domainEvent.ProductCode);
+            var status = new StatusGenericHandler();
+            var stock = _context.Find<ProductStock>(domainEvent.ProductName);
             if (stock == null)
-                throw new InvalidOperationException($"could not find the stock for product code {domainEvent.ProductCode} ");
+                return status.AddError($"could not find the stock for product called {domainEvent.ProductName} ");
+
+            if (stock.NumInStock < domainEvent.NumOrdered)
+                return status.AddError(
+                    $"I could not accept this order because there wasn't enough {domainEvent.ProductName} in stock.");
 
             stock.NumAllocated += domainEvent.NumOrdered;
+            return status;
         }
     }
 }
