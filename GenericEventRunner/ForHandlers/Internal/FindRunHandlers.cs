@@ -2,10 +2,8 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using GenericEventRunner.ForSetup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -31,7 +29,7 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// </summary>
         /// <param name="entityAndEvent"></param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
-        /// <param name="dontConvertExToStatus">If true then exceptions </param>
+        /// <param name="dontConvertExToStatus">If true then exceptions should be re-thrown</param>
         public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave, bool dontConvertExToStatus)
         {
             var status = new StatusGenericHandler
