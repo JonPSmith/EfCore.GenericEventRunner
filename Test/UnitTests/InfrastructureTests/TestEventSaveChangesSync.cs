@@ -18,7 +18,7 @@ using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests.InfrastructureTests
 {
-    public class TestContextWithEventHandlingSync
+    public class TestEventSaveChangesSync
     {
         [Fact]
         public void TestCreateOrderCheckEventsProduced()
@@ -68,31 +68,6 @@ namespace Test.UnitTests.InfrastructureTests
                 order.TaxRatePercent.ShouldEqual(4);
                 order.GrandTotalPrice.ShouldEqual(order.TotalPriceNoTax * (1 + order.TaxRatePercent / 100));
                 context.ProductStocks.OrderBy(x => x.NumInStock).First().NumAllocated.ShouldEqual(2);
-            }
-        }
-
-        [Fact]
-        public void TestOrderCreatedHandlerNotEnoughStockStatus()
-        {
-            //SETUP
-            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
-            {
-                var itemDto = new BasketItemDto
-                {
-                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
-                    NumOrdered = 10,
-                    ProductPrice = 123
-                };
-
-                //ATTEMPT
-                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
-                context.Add(order);
-                var status = context.SaveChangesWithBeforeStatuses();
-
-                //VERIFY
-                status.IsValid.ShouldBeFalse();
-                status.GetAllErrors().ShouldEqual("I could not accept this order because there wasn't enough Product1 in stock.");
             }
         }
 

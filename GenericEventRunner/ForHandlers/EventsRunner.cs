@@ -21,39 +21,39 @@ namespace GenericEventRunner.ForHandlers
     public class EventsRunner : IEventsRunner
     {
         private readonly FindRunHandlers _findRunHandlers;
-        private readonly GenericEventRunnerConfig _config;
+        private readonly IGenericEventRunnerConfig _config;
 
-        public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, GenericEventRunnerConfig config = null)
+        public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, IGenericEventRunnerConfig config)
         {
-            _config = config ?? new GenericEventRunnerConfig();
+            _config = config ?? throw new ArgumentNullException(nameof(config));
             _findRunHandlers = new FindRunHandlers(serviceProvider, logger, _config);
         }
 
         public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
-            Func<int> callBaseSaveChanges)
+            Func<int> callBaseSaveChanges, bool nonStatusCall)
         {
             var status = new StatusGenericHandler<int>();
-            status.CombineStatuses(RunBeforeSaveChangesEvents(getTrackedEntities));
+            status.CombineStatuses(RunBeforeSaveChangesEvents(getTrackedEntities, nonStatusCall));
             if (!status.IsValid) 
                 return status;
 
             status.Message = "Successfully saved";
             status.SetResult(callBaseSaveChanges.Invoke());
-            RunAfterSaveChangesEvents(getTrackedEntities);
+            RunAfterSaveChangesEvents(getTrackedEntities, nonStatusCall);
             return status;
         }
 
         public async Task<int> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
-            Func<Task<int>> callBaseSaveChangesAsync)
+            Func<Task<int>> callBaseSaveChangesAsync, bool nonStatusCall)
         {
-            RunBeforeSaveChangesEvents(getTrackedEntities);
+            RunBeforeSaveChangesEvents(getTrackedEntities, nonStatusCall);
             var numChanges = await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false);
-            RunAfterSaveChangesEvents(getTrackedEntities);
+            RunAfterSaveChangesEvents(getTrackedEntities, nonStatusCall);
             return numChanges;
         }
 
 
-        private IStatusGeneric RunBeforeSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        private IStatusGeneric RunBeforeSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, bool dontConvertExToStatus)
         {
             var status = new StatusGenericHandler();
 
@@ -73,7 +73,7 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    status.CombineStatuses( _findRunHandlers.RunHandlersForEvent(entityAndEvent, true));
+                    status.CombineStatuses( _findRunHandlers.RunHandlersForEvent(entityAndEvent, true, dontConvertExToStatus));
                     if (!status.IsValid)
                         break;
                 }
@@ -96,7 +96,7 @@ namespace GenericEventRunner.ForHandlers
             return status;
         }
 
-        private async Task RunBeforeSaveChangesEventsAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        private async Task RunBeforeSaveChangesEventsAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, bool dontConvertExToStatus)
         {
             //This has to run until there are no new events, because one event might trigger another event
             bool shouldRunAgain;
@@ -113,12 +113,12 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, true);
+                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, true, dontConvertExToStatus);
                 }
             } while (shouldRunAgain);
         }
 
-        private void RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        private void RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, bool dontConvertExToStatus)
         {
             var eventsToRun = new List<EntityAndEvent>();
             foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
@@ -129,7 +129,7 @@ namespace GenericEventRunner.ForHandlers
 
             foreach (var entityAndEvent in eventsToRun)
             { 
-                _findRunHandlers.RunHandlersForEvent(entityAndEvent, false);
+                _findRunHandlers.RunHandlersForEvent(entityAndEvent, false, dontConvertExToStatus);
             }
         }
 

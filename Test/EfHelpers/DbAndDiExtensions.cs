@@ -20,7 +20,7 @@ namespace Test.EfHelpers
     public static class DbAndDiExtensions
     {
         public static ExampleDbContext CreateAndSeedDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options,
-            List<LogOutput> logs = null)
+            List<LogOutput> logs = null, IGenericEventRunnerConfig config = null)
         {
             var context = options.CreateDbWithDiForHandlers(logs);
 
@@ -31,7 +31,7 @@ namespace Test.EfHelpers
         }
 
         public static ExampleDbContext CreateDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options,
-            List<LogOutput> logs = null)
+            List<LogOutput> logs = null, IGenericEventRunnerConfig config = null)
         {
             var services = new ServiceCollection();
             if (logs != null)
@@ -42,7 +42,7 @@ namespace Test.EfHelpers
             {
                 services.AddSingleton<ILogger<EventsRunner>>(new NullLogger<EventsRunner>());
             }
-            services.RegisterEventRunner();
+            services.RegisterEventRunner(config);
             services.RegisterEventHandlers(
                 Assembly.GetAssembly(typeof(OrderCreatedHandler)), 
                 Assembly.GetAssembly(typeof(BeforeHandlerCircularEvent)));

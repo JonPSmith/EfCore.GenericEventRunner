@@ -21,13 +21,13 @@ namespace GenericEventRunner.ForDbContext
             _eventsRunner = eventsRunner;
         }
 
-        public IStatusGeneric<int> SaveChangesWithBeforeStatuses(bool acceptAllChangesOnSuccess = true)
+        public IStatusGeneric<int> SaveChangesWithStatus(bool acceptAllChangesOnSuccess = true)
         {
             if (_eventsRunner == null)
-                throw new GenericEventRunnerException($"The {nameof(SaveChangesWithBeforeStatuses)} cannot be used unless the event runner is present");
+                throw new GenericEventRunnerException($"The {nameof(SaveChangesWithStatus)} cannot be used unless the event runner is present");
 
             return _eventsRunner.RunEventsBeforeAfterSaveChanges(() => ChangeTracker.Entries<EntityEvents>(),
-                () => base.SaveChanges(acceptAllChangesOnSuccess));
+                () => base.SaveChanges(acceptAllChangesOnSuccess), false);
         }
 
         //I only have to override these two version of SaveChanges, as the other two versions call these
@@ -37,7 +37,7 @@ namespace GenericEventRunner.ForDbContext
                 return base.SaveChanges(acceptAllChangesOnSuccess);
 
             var status = _eventsRunner.RunEventsBeforeAfterSaveChanges(() => ChangeTracker.Entries<EntityEvents>(),
-                () => base.SaveChanges(acceptAllChangesOnSuccess));
+                () => base.SaveChanges(acceptAllChangesOnSuccess), true);
 
             if (status.IsValid)
                 return status.Result;
@@ -53,7 +53,7 @@ namespace GenericEventRunner.ForDbContext
                 return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
 
             return await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
-                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken));
+                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), true);
         }
     }
 }

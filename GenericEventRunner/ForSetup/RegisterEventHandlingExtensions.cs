@@ -44,8 +44,9 @@ namespace GenericEventRunner.ForSetup
             return classesWithIHandle;
         }
 
-        public static void RegisterEventRunner(this IServiceCollection services)
+        public static void RegisterEventRunner(this IServiceCollection services, IGenericEventRunnerConfig config = null)
         {
+            services.AddSingleton<IGenericEventRunnerConfig>(config ?? new GenericEventRunnerConfig());
             services.AddScoped<IEventsRunner, EventsRunner>();
         }
     }

@@ -13,9 +13,9 @@ namespace GenericEventRunner.ForDbContext
     public interface IEventsRunner
     {
         IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
-            Func<int> callBaseSaveChanges);
+            Func<int> callBaseSaveChanges, bool nonStatusCall);
 
         Task<int> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
-            Func<Task<int>> callBaseSaveChangesAsync);
+            Func<Task<int>> callBaseSaveChangesAsync, bool nonStatusCall);
     }
 }

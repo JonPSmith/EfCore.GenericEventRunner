@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using GenericEventRunner.ForSetup;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,9 +17,9 @@ namespace GenericEventRunner.ForHandlers.Internal
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
-        private readonly GenericEventRunnerConfig _config;
+        private readonly IGenericEventRunnerConfig _config;
 
-        public FindRunHandlers(IServiceProvider serviceProvider, ILogger logger, GenericEventRunnerConfig config)
+        public FindRunHandlers(IServiceProvider serviceProvider, ILogger logger, IGenericEventRunnerConfig config)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
@@ -30,9 +31,13 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// </summary>
         /// <param name="entityAndEvent"></param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
-        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave)
+        /// <param name="dontConvertExToStatus">If true then exceptions </param>
+        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave, bool dontConvertExToStatus)
         {
-            var status = new StatusGenericHandler();
+            var status = new StatusGenericHandler
+            {
+                Message = "Successfully saved."
+            };
 
             var eventType = entityAndEvent.DomainEvent.GetType();
             var handlerInterface = (beforeSave ? typeof(IBeforeSaveEventHandler<>) : typeof(IAfterSaveEventHandler<>))
@@ -45,26 +50,74 @@ namespace GenericEventRunner.ForHandlers.Internal
             if (!handlers.Any())
             {
                 _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.");
-                if (!_config.DoNotThrowExceptionIfNoHandlerForAnEvent)
-                    throw new GenericEventRunnerException(
-                        $"Could not find a {beforeAfter} event handler for the event {eventType.Name}.",
-                        entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                throw new GenericEventRunnerException(
+                    $"Could not find a {beforeAfter} event handler for the event {eventType.Name}.",
+                    entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
             }
 
             foreach (var handler in handlers)
             {
+                bool HandleException(Exception ex, bool before)
+                {
+                    if (dontConvertExToStatus)
+                        return true;
+
+                    var attr = handler.GetType().GetCustomAttribute<EventHandlerConfigAttribute>();
+                    if (attr?.ExceptionErrorString != null || _config.TurnHandlerExceptionsToErrorStatus)
+                    {
+                        _logger.LogError(
+                            $"The {beforeAfter} event handler {eventType.FullName}, but it was turned into a status return.");
+                        var errorMessage = attr?.ExceptionErrorString ??
+                                           (before
+                                               ? _config.DefaultBeforeSaveExceptionErrorString
+                                               : _config.DefaultAfterSaveMessageSuffix);
+                        if (before)
+                        {
+                            status.AddError(ex, errorMessage);
+                        }
+                        else
+                        {
+                            status.Message = "Successfully saved, but " + errorMessage;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError(ex, $"The {beforeAfter} event handler {eventType.FullName} threw an exception.");
+                        return true;
+                    }
+
+                    return false;
+                }
+
                 _logger.LogInformation($"About to run a {beforeAfter} event handler {handler.GetType().FullName}.");
                 if (beforeSave)
                 {
-                    var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
-                    var handlerStatus = wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    IStatusGeneric handlerStatus = null;
+                    try
+                    {
+                        var wrappedHandler = (BeforeSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
+                        handlerStatus = wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    }
+                    catch (Exception ex)
+                    {
+                        if(HandleException(ex, true))
+                            throw;
+                    }
                     if (handlerStatus != null)
                         status.CombineStatuses(handlerStatus);
                 }
                 else
                 {
-                    var wrappedHandler = (AfterSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
-                    wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    try
+                    {
+                        var wrappedHandler = (AfterSaveEventHandler)Activator.CreateInstance(wrapperType, handler);
+                        wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (HandleException(ex, false))
+                            throw;
+                    }
                 }
             }
 
