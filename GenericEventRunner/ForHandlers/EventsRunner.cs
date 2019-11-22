@@ -37,7 +37,6 @@ namespace GenericEventRunner.ForHandlers
             if (!status.IsValid) 
                 return status;
 
-            status.Message = "Successfully saved";
             status.SetResult(callBaseSaveChanges.Invoke());
             status.CombineStatuses(RunAfterSaveChangesEvents(getTrackedEntities, nonStatusCall));
             return status;
@@ -73,7 +72,7 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    status.CombineStatuses( _findRunHandlers.RunHandlersForEvent(entityAndEvent, true, dontConvertExToStatus));
+                    status.CombineStatuses( _findRunHandlers.RunHandlersForEvent(entityAndEvent, true, dontConvertExToStatus, false).Result);
                     if (!status.IsValid)
                         break;
                 }
@@ -113,7 +112,7 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, true, dontConvertExToStatus);
+                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, true, dontConvertExToStatus, false);
                 }
             } while (shouldRunAgain);
         }
@@ -131,7 +130,7 @@ namespace GenericEventRunner.ForHandlers
             foreach (var entityAndEvent in eventsToRun)
             {
                 status.CombineStatuses(
-                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, false, dontConvertExToStatus));
+                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, false, dontConvertExToStatus, false).Result);
             }
 
             return status;

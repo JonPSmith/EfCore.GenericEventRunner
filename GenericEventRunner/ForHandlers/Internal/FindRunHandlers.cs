@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using GenericEventRunner.ForSetup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,13 +25,17 @@ namespace GenericEventRunner.ForHandlers.Internal
             _config = config;
         }
 
+        // thanks to https://rubikscode.net/2018/06/11/asynchronous-programming-in-net-benefits-and-tradeoffs-of-using-valuetask/
+
         /// <summary>
         /// This finds the handlers for the event and runs the handlers with the input event
         /// </summary>
         /// <param name="entityAndEvent"></param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
         /// <param name="dontConvertExToStatus">If true then exceptions should be re-thrown</param>
-        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave, bool dontConvertExToStatus)
+        /// <param name="asyncPossible">If true then we can call async methods</param>
+        public ValueTask<IStatusGeneric> RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave, 
+            bool dontConvertExToStatus, bool asyncPossible)
         {
             var status = new StatusGenericHandler
             {
@@ -119,7 +124,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                 }
             }
 
-            return status;
+            return new ValueTask<IStatusGeneric>(status);
         }
         
     }
