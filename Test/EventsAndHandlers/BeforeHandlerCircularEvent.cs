@@ -5,7 +5,7 @@ using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
 using StatusGeneric;
 
-namespace Test.TestEventHandlers
+namespace Test.EventsAndHandlers
 {
     public class BeforeHandlerCircularEvent : IBeforeSaveEventHandler<EventCircularEvent>
     {

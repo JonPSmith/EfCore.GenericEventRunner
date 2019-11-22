@@ -18,7 +18,7 @@ namespace GenericEventRunner.ForSetup
         /// a) For BeforeSave event handlers an error is added to the status
         /// b) For AfterSave event handlers the IStatusGeneric Message is changed to say that the database was updated, but an AfterSave handler failed
         /// </summary>
-        public bool TurnHandlerExceptionsToErrorStatus { get; set; }
+        public bool TurnHandlerExceptionsToErrorStatus { get; set; } = true;
 
         /// <summary>
         /// If TurnHandlerExceptionsToErrorStatus is true and a BeforeSave event handlers has an exception, then this message will be added as an error in the status.

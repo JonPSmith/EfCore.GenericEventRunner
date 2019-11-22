@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Test.TestEventHandlers;
+using Test.EventsAndHandlers;
 using TestSupport.EfHelpers;
 
 namespace Test.EfHelpers

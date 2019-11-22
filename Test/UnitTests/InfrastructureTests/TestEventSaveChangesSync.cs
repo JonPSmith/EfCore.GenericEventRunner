@@ -11,7 +11,7 @@ using EntityClasses.SupportClasses;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
 using Test.EfHelpers;
-using Test.TestEventHandlers;
+using Test.EventsAndHandlers;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
@@ -185,10 +185,6 @@ I could not accept this order because there wasn't enough Product1 in stock.");
             }
         }
 
-        private class EventWithNoHandler : IDomainEvent
-        {
-        }
-
         [Theory]
         [InlineData(EventToSend.Before)]
         [InlineData(EventToSend.After)]
@@ -199,17 +195,11 @@ I could not accept this order because there wasn't enough Product1 in stock.");
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var context = options.CreateAndSeedDbWithDiForHandlers();
             {
-                var itemDto = new BasketItemDto
-                {
-                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
-                    NumOrdered = 2,
-                    ProductPrice = 123
-                };
-                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
-                context.Add(order);
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
 
                 //ATTEMPT
-                order.AddEvent(new EventWithNoHandler(), beforeAfter);
+                tax.AddEvent(new EventWithNoHandler(), beforeAfter);
                 var ex = Assert.Throws<GenericEventRunnerException>(() => context.SaveChanges());
 
                 //VERIFY
@@ -220,7 +210,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
         }
 
         [Fact]
-        public void TestCircularEventException()
+        public void TestBeforeHandlerThrowsException()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
@@ -237,7 +227,45 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 context.SaveChanges();
 
                 //ATTEMPT
-                order.AddEvent(new EventCircularEvent());
+                order.AddEvent(new EventTestExceptionHandler());
+                var ex = Assert.Throws<ApplicationException>(() => context.SaveChanges());
+
+                //VERIFY
+                ex.Message.ShouldEqual(nameof(BeforeHandlerThrowsException));
+            }
+        }
+
+        [Fact]
+        public void TestBeforeHandlerThrowsExceptionWithAttribute()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestExceptionHandlerWithAttribute());
+                var ex = Assert.Throws<ApplicationException>(() => context.SaveChanges());
+
+                //VERIFY
+                ex.Message.ShouldEqual(nameof(BeforeHandlerThrowsExceptionWithAttribute));
+            }
+        }
+
+        [Fact]
+        public void TestCircularEventException()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var context = options.CreateAndSeedDbWithDiForHandlers();
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventCircularEvent());
                 var ex = Assert.Throws<GenericEventRunnerException>(() => context.SaveChanges());
 
                 //VERIFY

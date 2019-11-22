@@ -3,9 +3,9 @@
 
 using GenericEventRunner.ForEntities;
 
-namespace Test.TestEventHandlers
+namespace Test.EventsAndHandlers
 {
-    public class EventCircularEvent : IDomainEvent
+    public class EventTestExceptionHandlerWithAttribute : IDomainEvent
     {
         
     }

@@ -22,13 +22,16 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var services = new ServiceCollection();
+            var config = new GenericEventRunnerConfig();
 
             //ATTEMPT
-            services.RegisterEventRunner();
+            services.RegisterEventRunner(config);
 
             //VERIFY
             services.Contains(new ServiceDescriptor(typeof(IEventsRunner), typeof(EventsRunner), 
                 ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IGenericEventRunnerConfig), config), 
+                new ServiceDescriptorCompare()).ShouldBeTrue();
         }
 
         [Fact]

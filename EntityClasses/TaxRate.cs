@@ -2,10 +2,11 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
+using GenericEventRunner.ForEntities;
 
 namespace EntityClasses
 {
-    public class TaxRate
+    public class TaxRate : EntityEvents
     {
         public TaxRate(DateTime effectiveFrom, decimal taxRatePercent)
         {

@@ -11,7 +11,6 @@ using EntityClasses.SupportClasses;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
 using Test.EfHelpers;
-using Test.TestEventHandlers;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
