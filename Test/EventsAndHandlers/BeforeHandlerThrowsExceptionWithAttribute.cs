@@ -4,11 +4,12 @@
 using System;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
+using Microsoft.Extensions.DependencyInjection;
 using StatusGeneric;
 
 namespace Test.EventsAndHandlers
 {
-    [EventHandlerConfig("Attribute provided exception message")]
+    [EventHandlerConfig("Attribute provided exception message", ServiceLifetime.Scoped)]
     public class BeforeHandlerThrowsExceptionWithAttribute : IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>
     {
         public IStatusGeneric Handle(EntityEvents callingEntity, EventTestExceptionHandlerWithAttribute domainEvent)

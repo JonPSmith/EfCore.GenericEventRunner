@@ -28,7 +28,14 @@ namespace GenericEventRunner.ForSetup
 
             foreach (var classAndInterface in eventHandlersToRegister)
             {
-                services.AddTransient(classAndInterface.interfaceType, classAndInterface.classType);
+                var attr = classAndInterface.classType.GetCustomAttribute<EventHandlerConfigAttribute>();
+                var lifeTime = attr?.HandlerLifetime ?? ServiceLifetime.Transient;
+                if (lifeTime == ServiceLifetime.Transient)
+                    services.AddTransient(classAndInterface.interfaceType, classAndInterface.classType);
+                else if (lifeTime == ServiceLifetime.Scoped)
+                    services.AddScoped(classAndInterface.interfaceType, classAndInterface.classType);
+                else
+                    services.AddSingleton(classAndInterface.interfaceType, classAndInterface.classType);
             }
         }
 

@@ -9,6 +9,7 @@ using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Microsoft.Extensions.DependencyInjection;
+using Test.EventsAndHandlers;
 using Test.Helpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
@@ -41,11 +42,15 @@ namespace Test.UnitTests.InfrastructureTests
             var services = new ServiceCollection();
 
             //ATTEMPT
-            services.RegisterEventHandlers(Assembly.GetAssembly(typeof(OrderCreatedHandler)));
+            services.RegisterEventHandlers(Assembly.GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute)));
 
             //VERIFY
-            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<OrderCreatedEvent>), typeof(OrderCreatedHandler),
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
+                typeof(BeforeHandlerCircularEvent),
                 ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>), 
+                typeof(BeforeHandlerThrowsExceptionWithAttribute),
+                ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
         }
     }
 }
