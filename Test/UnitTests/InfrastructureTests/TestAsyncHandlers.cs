@@ -7,7 +7,7 @@ using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests.InfrastructureTests
 {
-    public class TestEventSaveChangesAsync
+    public class TestAsyncHandlers
     {
         [Fact]
         public async Task TestValueTask()
