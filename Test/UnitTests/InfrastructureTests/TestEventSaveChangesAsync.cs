@@ -181,8 +181,8 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 //VERIFY
                 logs.Count.ShouldEqual(3);
                 logs[0].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
-                logs[1].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
-                logs[2].Message.ShouldEqual("2: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
+                logs[1].Message.ShouldEqual("2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[2].Message.ShouldEqual("1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
             }
         }
 
