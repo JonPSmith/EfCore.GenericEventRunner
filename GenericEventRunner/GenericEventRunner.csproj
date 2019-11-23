@@ -35,4 +35,8 @@
     <DocumentationFile>bin\Release\netstandard2.1\GenericEventRunner.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.1\GenericEventRunner.xml</DocumentationFile>
+  </PropertyGroup>
+
 </Project>

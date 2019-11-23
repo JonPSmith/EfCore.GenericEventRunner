@@ -11,20 +11,38 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GenericEventRunner.ForSetup
 {
+    /// <summary>
+    /// This contains the extensions methods to register the GenericEventRunner and the various event handlers you have created
+    /// </summary>
     public static class RegisterGenericEventRunnerExtensions
     {
+        /// <summary>
+        /// This register the Generic EventRunner and the various event handlers you have created in the assemblies you provide.
+        /// NOTE: Uses default GenericEventRunnerConfig settings.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="assembliesToScan">Series of assemblies to scan. If not provided then scans the calling assembly</param>
         public static void RegisterGenericEventRunner(this IServiceCollection services,
             params Assembly[] assembliesToScan)
         {
+            if (!assembliesToScan.Any())
+                assembliesToScan = new Assembly[] { Assembly.GetCallingAssembly() };
+
             services.RegisterGenericEventRunner(new GenericEventRunnerConfig(), assembliesToScan);
         }
 
+        /// <summary>
+        /// This register the Generic EventRunner and the various event handlers you have created in the assemblies you provide.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="config">A GenericEventRunnerConfig instance with your own settings.</param>
+        /// <param name="assembliesToScan">Series of assemblies to scan. If not provided then scans the calling assembly</param>
         public static void RegisterGenericEventRunner(this IServiceCollection services,
             IGenericEventRunnerConfig config,
             params Assembly[] assembliesToScan)
         {
             if (!assembliesToScan.Any())
-                assembliesToScan = new Assembly[]{ Assembly.GetExecutingAssembly()};
+                assembliesToScan = new Assembly[]{ Assembly.GetCallingAssembly()};
 
             var eventHandlersToRegister = new List<(Type classType, Type interfaceType)>();
             var someAfterSaveHandlersFound = false;

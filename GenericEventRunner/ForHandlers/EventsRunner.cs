@@ -23,12 +23,25 @@ namespace GenericEventRunner.ForHandlers
         private readonly FindRunHandlers _findRunHandlers;
         private readonly IGenericEventRunnerConfig _config;
 
+        /// <summary>
+        /// This is the class that will manage the events inside your DbContext
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        /// <param name="logger"></param>
+        /// <param name="config"></param>
         public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, IGenericEventRunnerConfig config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _findRunHandlers = new FindRunHandlers(serviceProvider, logger, _config);
         }
 
+        /// <summary>
+        /// This runs the events before and after the base SaveChanges method is run
+        /// </summary>
+        /// <param name="getTrackedEntities">A function to get the tracked entities</param>
+        /// <param name="callBaseSaveChanges">A function that is linked to the base SaveChanges in your DbContext</param>
+        /// <param name="nonStatusCall">true if exceptions should bubble up (the other option is to change them to errors in the status)</param>
+        /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
         public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
             Func<int> callBaseSaveChanges, bool nonStatusCall)
         {
@@ -42,6 +55,13 @@ namespace GenericEventRunner.ForHandlers
             return status;
         }
 
+        /// <summary>
+        /// This runs the events before and after the base SaveChangesAsync method is run
+        /// </summary>
+        /// <param name="getTrackedEntities">A function to get the tracked entities</param>
+        /// <param name="callBaseSaveChangesAsync">A function that is linked to the base SaveChangesAsync in your DbContext</param>
+        /// <param name="nonStatusCall">true if exceptions should bubble up (the other option is to change them to errors in the status)</param>
+        /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
         public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
             Func<Task<int>> callBaseSaveChangesAsync, bool nonStatusCall)
         {
