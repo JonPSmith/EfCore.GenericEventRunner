@@ -22,7 +22,7 @@ namespace Test.UnitTests.InfrastructureTests
     public class TestEventSaveChangesAsync
     {
         [Fact]
-        public async Task TestCreateOrderCheckEventsProduced()
+        public void TestCreateOrderCheckEventsProduced()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
