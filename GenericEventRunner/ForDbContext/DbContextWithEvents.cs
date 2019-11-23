@@ -12,15 +12,32 @@ using StatusGeneric;
 
 namespace GenericEventRunner.ForDbContext
 {
+    /// <summary>
+    /// If you want to add GenericEventsRunner to your DbContext then inherit this instead of DbContext
+    /// This overrides the base SaveChanges/SaveChangesAsync to add the event runner before and after the call the base SaveChanges/SaveChangesAsync
+    ///
+    /// If you don't like inheriting this class then you can copy this code directly into your own DbContext
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class DbContextWithEvents<T> : DbContext where T : DbContext
     {
         private readonly IEventsRunner _eventsRunner;
 
+        /// <summary>
+        /// This sets up the DbContext options and adds the eventRunner
+        /// </summary>
+        /// <param name="options">normal EF Core options for a database</param>
+        /// <param name="eventsRunner">The Generic Event Runner - can be null which will turn off domain event handling</param>
         protected DbContextWithEvents(DbContextOptions<T> options, IEventsRunner eventsRunner) : base(options)
         {
             _eventsRunner = eventsRunner;
         }
 
+        /// <summary>
+        /// This is a spacial form of SaveChanges that returns an <see cref="T:IStatusGeneric{int}"/> status
+        /// </summary>
+        /// <param name="acceptAllChangesOnSuccess">normal SaveChanges option</param>
+        /// <returns>Status, with a Result that is the number of updates down by SaveChanges</returns>
         public IStatusGeneric<int> SaveChangesWithStatus(bool acceptAllChangesOnSuccess = true)
         {
             if (_eventsRunner == null)
@@ -30,6 +47,12 @@ namespace GenericEventRunner.ForDbContext
                 () => base.SaveChanges(acceptAllChangesOnSuccess), false);
         }
 
+        /// <summary>
+        /// This is a spacial form of SaveChangesAsync that returns an <see cref="T:IStatusGeneric{int)"/> status
+        /// </summary>
+        /// <param name="acceptAllChangesOnSuccess"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Status, with a Result that is the number of updates down by SaveChangesAsync</returns>
         public async Task<IStatusGeneric<int>> SaveChangesWithStatusAsync(bool acceptAllChangesOnSuccess = true,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -41,6 +64,13 @@ namespace GenericEventRunner.ForDbContext
         }
 
         //I only have to override these two version of SaveChanges, as the other two versions call these
+        
+        /// <summary>
+        /// EF Core's SaveChanges, but with domain event handling added
+        /// Throws an exception if any of the BeforeSave event handlers return a status with an error in it.
+        /// </summary>
+        /// <param name="acceptAllChangesOnSuccess"></param>
+        /// <returns>number of writes done to the database</returns>
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             if (_eventsRunner == null)
@@ -56,6 +86,13 @@ namespace GenericEventRunner.ForDbContext
                 $"Problem when writing to the database: {status.Message}{Environment.NewLine}{status.GetAllErrors()}");
         }
 
+        /// <summary>
+        /// EF Core's SaveChanges, but with domain event handling added
+        /// Throws an exception if any of the BeforeSave event handlers return a status with an error in it.
+        /// </summary>
+        /// <param name="acceptAllChangesOnSuccess"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
             CancellationToken cancellationToken = default(CancellationToken))
         {
