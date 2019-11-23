@@ -16,7 +16,7 @@ namespace GenericEventRunner.ForDbContext
     {
         private readonly IEventsRunner _eventsRunner;
 
-        public DbContextWithEvents(DbContextOptions<T> options, IEventsRunner eventsRunner) : base(options)
+        protected DbContextWithEvents(DbContextOptions<T> options, IEventsRunner eventsRunner) : base(options)
         {
             _eventsRunner = eventsRunner;
         }
@@ -28,6 +28,16 @@ namespace GenericEventRunner.ForDbContext
 
             return _eventsRunner.RunEventsBeforeAfterSaveChanges(() => ChangeTracker.Entries<EntityEvents>(),
                 () => base.SaveChanges(acceptAllChangesOnSuccess), false);
+        }
+
+        public async Task<IStatusGeneric<int>> SaveChangesWithStatusAsync(bool acceptAllChangesOnSuccess = true,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (_eventsRunner == null)
+                throw new GenericEventRunnerException($"The {nameof(SaveChangesWithStatusAsync)} cannot be used unless the event runner is present");
+
+            return await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
+                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), false);
         }
 
         //I only have to override these two version of SaveChanges, as the other two versions call these
@@ -52,8 +62,14 @@ namespace GenericEventRunner.ForDbContext
             if (_eventsRunner == null)
                 return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
 
-            return await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
+            var status = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
                 () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), true);
+
+            if (status.IsValid)
+                return status.Result;
+
+            throw new GenericEventRunnerException(
+                $"Problem when writing to the database: {status.Message}{Environment.NewLine}{status.GetAllErrors()}");
         }
     }
 }
