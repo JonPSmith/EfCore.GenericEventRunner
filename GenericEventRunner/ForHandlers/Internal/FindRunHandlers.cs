@@ -28,9 +28,10 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// This finds the handlers for the event and runs the handlers with the input event
         /// </summary>
         /// <param name="entityAndEvent"></param>
+        /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
         /// <param name="dontConvertExToStatus">If true then exceptions should be re-thrown</param>
-        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, bool beforeSave, bool dontConvertExToStatus)
+        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave, bool dontConvertExToStatus)
         {
             var status = new StatusGenericHandler
             {
@@ -87,7 +88,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                     return false;
                 }
 
-                _logger.LogInformation($"About to run a {beforeAfter} event handler {handler.GetType().FullName}.");
+                _logger.LogInformation($"{loopCount}: About to run a {beforeAfter} event handler {handler.GetType().FullName}.");
                 if (beforeSave)
                 {
                     IStatusGeneric handlerStatus = null;

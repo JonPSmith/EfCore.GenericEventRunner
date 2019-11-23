@@ -103,9 +103,9 @@ namespace Test.UnitTests.InfrastructureTests
                 //VERIFY
                 status.IsValid.ShouldBeTrue(status.GetAllErrors());
                 logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
-                logs[1].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
-                logs[2].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[0].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
+                logs[1].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
+                logs[2].Message.ShouldEqual("2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
             }
         }
 
@@ -166,9 +166,9 @@ namespace Test.UnitTests.InfrastructureTests
                 //VERIFY
                 status.IsValid.ShouldBeTrue(status.GetAllErrors());
                 logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
-                logs[1].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
-                logs[2].Message.ShouldEqual("About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
+                logs[0].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
+                logs[1].Message.ShouldEqual("2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[2].Message.ShouldEqual("1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
             }
         }
 
