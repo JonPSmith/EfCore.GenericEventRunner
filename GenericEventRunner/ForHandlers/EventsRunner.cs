@@ -42,13 +42,17 @@ namespace GenericEventRunner.ForHandlers
             return status;
         }
 
-        public async Task<int> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
+        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
             Func<Task<int>> callBaseSaveChangesAsync, bool nonStatusCall)
         {
-            RunBeforeSaveChangesEvents(getTrackedEntities, nonStatusCall);
-            var numChanges = await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false);
-            RunAfterSaveChangesEvents(getTrackedEntities, nonStatusCall);
-            return numChanges;
+            var status = new StatusGenericHandler<int>();
+            status.CombineStatuses(RunBeforeSaveChangesEvents(getTrackedEntities, nonStatusCall));
+            if (!status.IsValid)
+                return status;
+
+            status.SetResult(await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false));
+            status.CombineStatuses(RunAfterSaveChangesEvents(getTrackedEntities, nonStatusCall));
+            return status;
         }
 
 
@@ -120,6 +124,10 @@ namespace GenericEventRunner.ForHandlers
         private IStatusGeneric RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, bool dontConvertExToStatus)
         {
             var status = new StatusGenericHandler();
+            if (_config.NotUsingAfterSaveHandlers)
+                //Skip this stage if NotUsingAfterSaveHandlers is true
+                return status;
+
             var eventsToRun = new List<EntityAndEvent>();
             foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
             {

@@ -9,4 +9,30 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageVersion>1.0.0-preview001</PackageVersion>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <PackageId>EfCore.GenericEventRunner</PackageId>
+    <Authors>Jon P Smith</Authors>
+    <Company>Selective Analytics</Company>
+    <Product>GenericServices.StatusGeneric</Product>
+    <Description>A library to provide domain event handling to EF Core.</Description>
+    <Copyright>Copyright (c) 2019 Jon P Smith</Copyright>
+    <PackageLicenseUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
+    <PackageReleaseNotes>
+      - First release.
+    </PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.1\GenericEventRunner.xml</DocumentationFile>
+  </PropertyGroup>
+
 </Project>

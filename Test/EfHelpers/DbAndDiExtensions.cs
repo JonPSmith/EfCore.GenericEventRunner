@@ -42,8 +42,7 @@ namespace Test.EfHelpers
             {
                 services.AddSingleton<ILogger<EventsRunner>>(new NullLogger<EventsRunner>());
             }
-            services.RegisterEventRunner(config);
-            services.RegisterEventHandlers(
+            services.RegisterGenericEventRunner(config,
                 Assembly.GetAssembly(typeof(OrderCreatedHandler)), 
                 Assembly.GetAssembly(typeof(BeforeHandlerCircularEvent)));
             services.AddScoped(x =>
