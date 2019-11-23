@@ -3,11 +3,8 @@
 
 using System.Linq;
 using System.Reflection;
-using EntityClasses.DomainEvents;
-using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
-using Infrastructure.BeforeEventHandlers;
 using Microsoft.Extensions.DependencyInjection;
 using Test.EventsAndHandlers;
 using Test.Helpers;
@@ -18,22 +15,6 @@ namespace Test.UnitTests.InfrastructureTests
 {
     public class TestRegisterDomainEvents
     {
-        [Fact]
-        public void TestRegisterEventRunner()
-        {
-            //SETUP
-            var services = new ServiceCollection();
-            var config = new GenericEventRunnerConfig();
-
-            //ATTEMPT
-            services.RegisterEventRunner(config);
-
-            //VERIFY
-            services.Contains(new ServiceDescriptor(typeof(IEventsRunner), typeof(EventsRunner), 
-                ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
-            services.Contains(new ServiceDescriptor(typeof(IGenericEventRunnerConfig), config), 
-                new ServiceDescriptorCompare()).ShouldBeTrue();
-        }
 
         [Fact]
         public void TestRegisterEventHandlers()
@@ -42,7 +23,7 @@ namespace Test.UnitTests.InfrastructureTests
             var services = new ServiceCollection();
 
             //ATTEMPT
-            services.RegisterEventHandlers(Assembly.GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute)));
+            services.RegisterGenericEventRunner(Assembly.GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute)));
 
             //VERIFY
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
@@ -51,6 +32,31 @@ namespace Test.UnitTests.InfrastructureTests
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>), 
                 typeof(BeforeHandlerThrowsExceptionWithAttribute),
                 ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<EventTestAfterExceptionHandler>),
+                typeof(AfterHandlerThrowsException),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+        }
+
+        [Fact]
+        public void TestRegisterEventHandlersWithConfigTuningOffAfterHandlers()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+            var config = new GenericEventRunnerConfig {NotUsingAfterSaveHandlers = true};
+
+            //ATTEMPT
+            services.RegisterGenericEventRunner(config, Assembly.GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute)));
+
+            //VERIFY
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
+                typeof(BeforeHandlerCircularEvent),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>),
+                typeof(BeforeHandlerThrowsExceptionWithAttribute),
+                ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<EventTestAfterExceptionHandler>),
+                typeof(AfterHandlerThrowsException),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeFalse();
         }
     }
 }

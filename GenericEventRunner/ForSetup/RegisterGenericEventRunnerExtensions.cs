@@ -11,20 +11,36 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GenericEventRunner.ForSetup
 {
-    public static class RegisterEventHandlingExtensions
+    public static class RegisterGenericEventRunnerExtensions
     {
-        public static void RegisterEventHandlers(this IServiceCollection services, params Assembly[] assembliesToScan)
+        public static void RegisterGenericEventRunner(this IServiceCollection services,
+            params Assembly[] assembliesToScan)
+        {
+            services.RegisterGenericEventRunner(new GenericEventRunnerConfig(), assembliesToScan);
+        }
+
+        public static void RegisterGenericEventRunner(this IServiceCollection services,
+            IGenericEventRunnerConfig config,
+            params Assembly[] assembliesToScan)
         {
             if (!assembliesToScan.Any())
                 assembliesToScan = new Assembly[]{ Assembly.GetExecutingAssembly()};
 
             var eventHandlersToRegister = new List<(Type classType, Type interfaceType)>();
+            var someAfterSaveHandlersFound = false;
             foreach (var assembly in assembliesToScan)
             {
                 eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandler<>), assembly));
-                eventHandlersToRegister
-                    .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandler<>), assembly));
+                var count = eventHandlersToRegister.Count;
+                if (!config.NotUsingAfterSaveHandlers)
+                    eventHandlersToRegister
+                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandler<>), assembly));
+                
+                someAfterSaveHandlersFound |= (eventHandlersToRegister.Count > count);
             }
+
+            if (!someAfterSaveHandlersFound)
+                config.NotUsingAfterSaveHandlers = true;
 
             foreach (var classAndInterface in eventHandlersToRegister)
             {
@@ -37,6 +53,9 @@ namespace GenericEventRunner.ForSetup
                 else
                     services.AddSingleton(classAndInterface.interfaceType, classAndInterface.classType);
             }
+
+            services.AddSingleton<IGenericEventRunnerConfig>(config);
+            services.AddScoped<IEventsRunner, EventsRunner>();
         }
 
         private static IEnumerable<(Type classType, Type interfaceType)> ClassesWithGivenEventHandlerType(Type interfaceToLookFor, Assembly assembly)
@@ -51,10 +70,5 @@ namespace GenericEventRunner.ForSetup
             return classesWithIHandle;
         }
 
-        public static void RegisterEventRunner(this IServiceCollection services, IGenericEventRunnerConfig config = null)
-        {
-            services.AddSingleton<IGenericEventRunnerConfig>(config ?? new GenericEventRunnerConfig());
-            services.AddScoped<IEventsRunner, EventsRunner>();
-        }
     }
 }

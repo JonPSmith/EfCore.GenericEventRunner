@@ -124,6 +124,10 @@ namespace GenericEventRunner.ForHandlers
         private IStatusGeneric RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, bool dontConvertExToStatus)
         {
             var status = new StatusGenericHandler();
+            if (_config.NotUsingAfterSaveHandlers)
+                //Skip this stage if NotUsingAfterSaveHandlers is true
+                return status;
+
             var eventsToRun = new List<EntityAndEvent>();
             foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
             {

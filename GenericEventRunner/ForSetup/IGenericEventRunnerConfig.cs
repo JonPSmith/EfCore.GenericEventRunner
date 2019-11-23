@@ -12,6 +12,12 @@ namespace GenericEventRunner.ForSetup
         int MaxTimesToLookForBeforeEvents { get; }
 
         /// <summary>
+        /// If this is set to true, then the AfterSave event handlers aren't used
+        /// NOTE: This is set to true if the RegisterGenericEventRunner doesn't find any AfterSave event handlers
+        /// </summary>
+        bool NotUsingAfterSaveHandlers { get; set; }
+
+        /// <summary>
         /// If a handler throws an exception when SaveChangesWithStatus/Async is called and this property is true,
         ///    then the Exception will be turned into a IStatusGeneric status
         /// a) For BeforeSave event handlers an error is added to the status
