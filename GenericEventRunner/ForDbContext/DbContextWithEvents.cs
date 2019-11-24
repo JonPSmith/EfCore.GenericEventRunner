@@ -82,8 +82,7 @@ namespace GenericEventRunner.ForDbContext
             if (status.IsValid)
                 return status.Result;
 
-            throw new GenericEventRunnerException(
-                $"Problem when writing to the database: {status.Message}{Environment.NewLine}{status.GetAllErrors()}");
+            throw new GenericEventRunnerStatusException(status);
         }
 
         /// <summary>
@@ -105,8 +104,7 @@ namespace GenericEventRunner.ForDbContext
             if (status.IsValid)
                 return status.Result;
 
-            throw new GenericEventRunnerException(
-                $"Problem when writing to the database: {status.Message}{Environment.NewLine}{status.GetAllErrors()}");
+            throw new GenericEventRunnerStatusException(status);
         }
     }
 }

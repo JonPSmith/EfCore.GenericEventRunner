@@ -9,6 +9,7 @@ using DataLayer;
 using EntityClasses;
 using EntityClasses.DomainEvents;
 using EntityClasses.SupportClasses;
+using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
 using Test.EfHelpers;
@@ -89,10 +90,10 @@ namespace Test.UnitTests.InfrastructureTests
                 //ATTEMPT
                 var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
                 context.Add(order);
-                var ex = await Assert.ThrowsAsync<GenericEventRunnerException>(async () => await context.SaveChangesAsync());
+                var ex = await Assert.ThrowsAsync<GenericEventRunnerStatusException>(async () => await context.SaveChangesAsync());
 
                 //VERIFY
-                ex.Message.ShouldEqual(@"Problem when writing to the database: Failed with 1 error
+                ex.Message.ShouldEqual(@"Failed with 1 error
 I could not accept this order because there wasn't enough Product1 in stock.");
             }
         }
