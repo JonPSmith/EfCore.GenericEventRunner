@@ -12,6 +12,7 @@ using EntityClasses.SupportClasses;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
+using GenericEventRunner.ForSetup;
 using Test.EfHelpers;
 using Test.EventsAndHandlers;
 using TestSupport.EfHelpers;
@@ -264,7 +265,34 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 var ex = await Assert.ThrowsAsync<GenericEventRunnerException>(async () => await context.SaveChangesAsync());
 
                 //VERIFY
-                ex.Message.ShouldEqual("The BeforeSave event loop exceeded the config's MaxTimesToLookForBeforeEvents value of 6. This implies a circular sets of events.");
+                ex.Message.ShouldStartWith("The BeforeSave event loop exceeded the config's MaxTimesToLookForBeforeEvents value of 6.");
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task TestStopOnFirstBeforeHandlerThatHasAnError(bool stopOnFirst)
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var config = new GenericEventRunnerConfig
+            {
+                StopOnFirstBeforeHandlerThatHasAnError = stopOnFirst
+            };
+            var context = options.CreateAndSeedDbWithDiForHandlers(config: config);
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestBeforeReturnError());
+                tax.AddEvent(new EventTestBeforeReturnError());
+                var ex = await Assert.ThrowsAsync<GenericEventRunnerStatusException>(async () => await context.SaveChangesAsync());
+
+                //VERIFY
+                context.StatusFromLastSaveChanges.IsValid.ShouldBeFalse();
+                context.StatusFromLastSaveChanges.Errors.Count.ShouldEqual(stopOnFirst ? 1 : 2);
             }
         }
 

@@ -24,6 +24,12 @@ namespace GenericEventRunner.ForDbContext
         private readonly IEventsRunner _eventsRunner;
 
         /// <summary>
+        /// This returns the Status of last SaveChanges/Async and SaveChangesWithStatus/Async
+        /// </summary>
+        public IStatusGeneric<int> StatusFromLastSaveChanges { get; private set; }
+
+
+        /// <summary>
         /// This sets up the DbContext options and adds the eventRunner
         /// </summary>
         /// <param name="options">normal EF Core options for a database</param>
@@ -43,8 +49,10 @@ namespace GenericEventRunner.ForDbContext
             if (_eventsRunner == null)
                 throw new GenericEventRunnerException($"The {nameof(SaveChangesWithStatus)} cannot be used unless the event runner is present");
 
-            return _eventsRunner.RunEventsBeforeAfterSaveChanges(() => ChangeTracker.Entries<EntityEvents>(),
-                () => base.SaveChanges(acceptAllChangesOnSuccess), false);
+            StatusFromLastSaveChanges = _eventsRunner.RunEventsBeforeAfterSaveChanges(() => ChangeTracker.Entries<EntityEvents>(),
+                () => base.SaveChanges(acceptAllChangesOnSuccess));
+            
+            return StatusFromLastSaveChanges;
         }
 
         /// <summary>
@@ -54,13 +62,15 @@ namespace GenericEventRunner.ForDbContext
         /// <param name="cancellationToken"></param>
         /// <returns>Status, with a Result that is the number of updates down by SaveChangesAsync</returns>
         public async Task<IStatusGeneric<int>> SaveChangesWithStatusAsync(bool acceptAllChangesOnSuccess = true,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             if (_eventsRunner == null)
                 throw new GenericEventRunnerException($"The {nameof(SaveChangesWithStatusAsync)} cannot be used unless the event runner is present");
 
-            return await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
-                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), false);
+            StatusFromLastSaveChanges = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
+                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken));
+
+            return StatusFromLastSaveChanges;
         }
 
         //I only have to override these two version of SaveChanges, as the other two versions call these
@@ -76,13 +86,13 @@ namespace GenericEventRunner.ForDbContext
             if (_eventsRunner == null)
                 return base.SaveChanges(acceptAllChangesOnSuccess);
 
-            var status = _eventsRunner.RunEventsBeforeAfterSaveChanges(() => ChangeTracker.Entries<EntityEvents>(),
-                () => base.SaveChanges(acceptAllChangesOnSuccess), true);
+            StatusFromLastSaveChanges = _eventsRunner.RunEventsBeforeAfterSaveChanges(() => ChangeTracker.Entries<EntityEvents>(),
+                () => base.SaveChanges(acceptAllChangesOnSuccess));
 
-            if (status.IsValid)
-                return status.Result;
+            if (StatusFromLastSaveChanges.IsValid)
+                return StatusFromLastSaveChanges.Result;
 
-            throw new GenericEventRunnerStatusException(status);
+            throw new GenericEventRunnerStatusException(StatusFromLastSaveChanges);
         }
 
         /// <summary>
@@ -93,18 +103,18 @@ namespace GenericEventRunner.ForDbContext
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             if (_eventsRunner == null)
                 return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
 
-            var status = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
-                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), true);
+            StatusFromLastSaveChanges = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(() => ChangeTracker.Entries<EntityEvents>(),
+                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken));
 
-            if (status.IsValid)
-                return status.Result;
+            if (StatusFromLastSaveChanges.IsValid)
+                return StatusFromLastSaveChanges.Result;
 
-            throw new GenericEventRunnerStatusException(status);
+            throw new GenericEventRunnerStatusException(StatusFromLastSaveChanges);
         }
     }
 }

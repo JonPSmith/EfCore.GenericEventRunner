@@ -10,12 +10,21 @@ using StatusGeneric;
 
 namespace GenericEventRunner.ForDbContext
 {
+    /// <summary>
+    /// This is the interface for the Events Runner that is in the DbContext
+    /// </summary>
     public interface IEventsRunner
     {
+        /// <summary>
+        /// This Hanlses 
+        /// </summary>
+        /// <param name="getTrackedEntities"></param>
+        /// <param name="callBaseSaveChanges"></param>
+        /// <returns></returns>
         IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
-            Func<int> callBaseSaveChanges, bool nonStatusCall);
+            Func<int> callBaseSaveChanges);
 
         Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
-            Func<Task<int>> callBaseSaveChangesAsync, bool nonStatusCall);
+            Func<Task<int>> callBaseSaveChangesAsync);
     }
 }

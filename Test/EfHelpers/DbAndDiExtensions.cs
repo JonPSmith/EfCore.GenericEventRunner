@@ -22,7 +22,7 @@ namespace Test.EfHelpers
         public static ExampleDbContext CreateAndSeedDbWithDiForHandlers(this DbContextOptions<ExampleDbContext> options,
             List<LogOutput> logs = null, IGenericEventRunnerConfig config = null)
         {
-            var context = options.CreateDbWithDiForHandlers(logs);
+            var context = options.CreateDbWithDiForHandlers(logs, config);
 
             context.Database.EnsureCreated();
             context.SeedTaxAndStock();

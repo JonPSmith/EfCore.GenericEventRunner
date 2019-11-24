@@ -192,6 +192,34 @@ namespace Test.UnitTests.InfrastructureTests
             }
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task TestStopOnFirstBeforeHandlerThatHasAnError(bool stopOnFirst)
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var config = new GenericEventRunnerConfig
+            {
+                StopOnFirstBeforeHandlerThatHasAnError = stopOnFirst
+            };
+            var context = options.CreateAndSeedDbWithDiForHandlers(config: config);
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestBeforeReturnError());
+                tax.AddEvent(new EventTestBeforeReturnError());
+                var status = await context.SaveChangesWithStatusAsync();
+
+                //VERIFY
+                status.IsValid.ShouldBeFalse();
+                status.Errors.Count.ShouldEqual(stopOnFirst ? 1 : 2);
+                context.StatusFromLastSaveChanges.Errors.Count.ShouldEqual(stopOnFirst ? 1 : 2);
+            }
+        }
+
         [Fact]
         public async Task TestAfterHandlerThrowsException()
         {

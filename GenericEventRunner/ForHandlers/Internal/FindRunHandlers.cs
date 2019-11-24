@@ -30,8 +30,8 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// <param name="entityAndEvent"></param>
         /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
-        /// <param name="dontConvertExToStatus">If true then exceptions should be re-thrown</param>
-        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave, bool dontConvertExToStatus)
+        /// <returns>Returns status with </returns>
+        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave)
         {
             var status = new StatusGenericHandler
             {
