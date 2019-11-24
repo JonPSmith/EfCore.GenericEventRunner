@@ -103,9 +103,9 @@ namespace Test.UnitTests.InfrastructureTests
                 //VERIFY
                 status.IsValid.ShouldBeTrue(status.GetAllErrors());
                 logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
-                logs[1].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
-                logs[2].Message.ShouldEqual("2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
+                logs[1].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
+                logs[2].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
             }
         }
 
@@ -166,42 +166,19 @@ namespace Test.UnitTests.InfrastructureTests
                 //VERIFY
                 status.IsValid.ShouldBeTrue(status.GetAllErrors());
                 logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
-                logs[1].Message.ShouldEqual("2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
-                logs[2].Message.ShouldEqual("1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
+                logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
+                logs[1].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[2].Message.ShouldEqual("A1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
             }
         }
 
+
         [Fact]
-        public async Task TestBeforeHandlerThrowsExceptionTurnedIntoStatus()
+        public async Task TestBeforeHandlerThrowsException()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var context = options.CreateAndSeedDbWithDiForHandlers();
-            {
-                var tax = new TaxRate(DateTime.Now, 6);
-                context.Add(tax);
-
-                //ATTEMPT
-                tax.AddEvent(new EventTestBeforeExceptionHandler());
-                var status = await context.SaveChangesWithStatusAsync();
-
-                //VERIFY
-                status.IsValid.ShouldBeFalse();
-                status.GetAllErrors().ShouldEqual("There was a system error. If this persists then please contact us.");
-            }
-        }
-
-        [Fact]
-        public async Task TestBeforeHandlerThrowsExceptionTurnedOnInConfig()
-        {
-            //SETUP
-            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var config = new GenericEventRunnerConfig
-            {
-                TurnHandlerExceptionsToErrorStatus = false
-            };
-            var context = options.CreateAndSeedDbWithDiForHandlers(config: config);
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -216,27 +193,7 @@ namespace Test.UnitTests.InfrastructureTests
         }
 
         [Fact]
-        public async Task TestBeforeHandlerThrowsExceptionWithAttributeTurnedIntoStatus()
-        {
-            //SETUP
-            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
-            {
-                var tax = new TaxRate(DateTime.Now, 6);
-                context.Add(tax);
-
-                //ATTEMPT
-                tax.AddEvent(new EventTestExceptionHandlerWithAttribute());
-                var status = await context.SaveChangesWithStatusAsync();
-
-                //VERIFY
-                status.IsValid.ShouldBeFalse();
-                status.GetAllErrors().ShouldEqual("Attribute provided exception message");
-            }
-        }
-
-        [Fact]
-        public async Task TestAfterHandlerThrowsExceptionTurnedToMessage()
+        public async Task TestAfterHandlerThrowsException()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
@@ -247,11 +204,10 @@ namespace Test.UnitTests.InfrastructureTests
 
                 //ATTEMPT
                 tax.AddEvent(new EventTestAfterExceptionHandler(), EventToSend.After);
-                var status = await context.SaveChangesWithStatusAsync();
+                var ex = await Assert.ThrowsAsync<ApplicationException>(async () => await context.SaveChangesAsync());
 
                 //VERIFY
-                status.IsValid.ShouldBeTrue();
-                status.Message.ShouldEqual("Successfully saved, but it failed to sent a update report.");
+                ex.Message.ShouldEqual(nameof(AfterHandlerThrowsException));
             }
         }
 

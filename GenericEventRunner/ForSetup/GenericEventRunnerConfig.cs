@@ -3,6 +3,10 @@
 
 namespace GenericEventRunner.ForSetup
 {
+    /// <summary>
+    /// This holds the configuration settings for the GenericEventRunner
+    /// NOTE: This is registered as a singleton, i.e. the values cannot be changes dynamically
+    /// </summary>
     public class GenericEventRunnerConfig : IGenericEventRunnerConfig
     {
         /// <summary>
@@ -17,27 +21,5 @@ namespace GenericEventRunner.ForSetup
         /// NOTE: This is set to true if the RegisterGenericEventRunner doesn't find any AfterSave event handlers
         /// </summary>
         public bool NotUsingAfterSaveHandlers { get; set; }
-
-        /// <summary>
-        /// If a handler throws an exception when SaveChangesWithStatus/Async is called and this property is true,
-        ///    then the Exception will be turned into a IStatusGeneric status
-        /// a) For BeforeSave event handlers an error is added to the status
-        /// b) For AfterSave event handlers the IStatusGeneric Message is changed to say that the database was updated, but an AfterSave handler failed
-        /// </summary>
-        public bool TurnHandlerExceptionsToErrorStatus { get; set; } = true;
-
-        /// <summary>
-        /// If TurnHandlerExceptionsToErrorStatus is true and a BeforeSave event handlers has an exception, then this message will be added as an error in the status.
-        /// NOTE: The EventHandlerConfigAttribute.ExceptionErrorString overrides this
-        /// </summary>
-        public string DefaultBeforeSaveExceptionErrorString { get; set; } =
-            "There was a system error. If this persists then please contact us.";
-
-        /// <summary>
-        /// If TurnHandlerExceptionsToErrorStatus is true and an AfterSave event handlers has an exception, then this message will added to the end of the status message.
-        /// The prefix of the message is "Successfully saved, but ". 
-        /// NOTE: The EventHandlerConfigAttribute.ExceptionErrorString overrides this
-        /// </summary>
-        public string DefaultAfterSaveMessageSuffix { get; set; } = "it failed to sent a update report.";
     }
 }

@@ -2,6 +2,9 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 namespace GenericEventRunner.ForSetup
 {
+    /// <summary>
+    /// Definition of the properties etc. for configuring how the EventsRunner works
+    /// </summary>
     public interface IGenericEventRunnerConfig
     {
         /// <summary>
@@ -16,26 +19,5 @@ namespace GenericEventRunner.ForSetup
         /// NOTE: This is set to true if the RegisterGenericEventRunner doesn't find any AfterSave event handlers
         /// </summary>
         bool NotUsingAfterSaveHandlers { get; set; }
-
-        /// <summary>
-        /// If a handler throws an exception when SaveChangesWithStatus/Async is called and this property is true,
-        ///    then the Exception will be turned into a IStatusGeneric status
-        /// a) For BeforeSave event handlers an error is added to the status
-        /// b) For AfterSave event handlers the IStatusGeneric Message is changed to say that the database was updated, but an AfterSave handler failed
-        /// </summary>
-        bool TurnHandlerExceptionsToErrorStatus { get; }
-
-        /// <summary>
-        /// If TurnHandlerExceptionsToErrorStatus is true and a BeforeSave event handlers has an exception, then this message will be added as an error in the status.
-        /// NOTE: The EventHandlerConfigAttribute.ExceptionErrorString overrides this
-        /// </summary>
-        string DefaultBeforeSaveExceptionErrorString { get; }
-
-        /// <summary>
-        /// If TurnHandlerExceptionsToErrorStatus is true and an AfterSave event handlers has an exception, then this message will added to the end of the status message.
-        /// The prefix of the message is "Successfully saved, but ". 
-        /// NOTE: The EventHandlerConfigAttribute.ExceptionErrorString overrides this
-        /// </summary>
-        string DefaultAfterSaveMessageSuffix { get; }
     }
 }

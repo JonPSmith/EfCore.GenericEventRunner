@@ -11,7 +11,7 @@ namespace Test.EventsAndHandlers
     {
         public void Handle(EntityEvents callingEntity, EventTestAfterExceptionHandler domainEvent)
         {
-            throw new ApplicationException(nameof(BeforeHandlerThrowsException));
+            throw new ApplicationException(nameof(AfterHandlerThrowsException));
         }
     }
 }

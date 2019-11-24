@@ -9,7 +9,7 @@ using StatusGeneric;
 
 namespace Test.EventsAndHandlers
 {
-    [EventHandlerConfig("Attribute provided exception message", ServiceLifetime.Scoped)]
+    [EventHandlerConfig(ServiceLifetime.Scoped)]
     public class BeforeHandlerThrowsExceptionWithAttribute : IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>
     {
         public IStatusGeneric Handle(EntityEvents callingEntity, EventTestExceptionHandlerWithAttribute domainEvent)

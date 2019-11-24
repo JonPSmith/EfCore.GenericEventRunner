@@ -60,16 +60,16 @@ namespace GenericEventRunner.ForSetup
             if (!someAfterSaveHandlersFound)
                 config.NotUsingAfterSaveHandlers = true;
 
-            foreach (var classAndInterface in eventHandlersToRegister)
+            foreach (var (implementationType, interfaceType) in eventHandlersToRegister)
             {
-                var attr = classAndInterface.classType.GetCustomAttribute<EventHandlerConfigAttribute>();
+                var attr = implementationType.GetCustomAttribute<EventHandlerConfigAttribute>();
                 var lifeTime = attr?.HandlerLifetime ?? ServiceLifetime.Transient;
                 if (lifeTime == ServiceLifetime.Transient)
-                    services.AddTransient(classAndInterface.interfaceType, classAndInterface.classType);
+                    services.AddTransient(interfaceType, implementationType);
                 else if (lifeTime == ServiceLifetime.Scoped)
-                    services.AddScoped(classAndInterface.interfaceType, classAndInterface.classType);
+                    services.AddScoped(interfaceType, implementationType);
                 else
-                    services.AddSingleton(classAndInterface.interfaceType, classAndInterface.classType);
+                    services.AddSingleton(interfaceType, implementationType);
             }
 
             services.AddSingleton<IGenericEventRunnerConfig>(config);
