@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace GenericEventRunner.ForHandlers.Internal
 {
     //Thanks to https://cpratt.co/async-tips-tricks/
-    public static class AsyncHelper
+    internal static class AsyncHelper
     {
         private static readonly TaskFactory TaskFactory = new
             TaskFactory(CancellationToken.None,

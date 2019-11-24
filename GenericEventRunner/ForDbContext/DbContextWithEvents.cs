@@ -25,8 +25,9 @@ namespace GenericEventRunner.ForDbContext
 
         /// <summary>
         /// This returns the Status of last SaveChanges/Async and SaveChangesWithStatus/Async
+        /// NOTE: This is null if no event handler is provided, or if none of the SaveChanges/Async etc. has not been called yet.
         /// </summary>
-        public IStatusGeneric<int> StatusFromLastSaveChanges { get; private set; }
+        public IStatusGeneric<int> StatusFromLastSaveChanges { get; private set; } 
 
 
         /// <summary>

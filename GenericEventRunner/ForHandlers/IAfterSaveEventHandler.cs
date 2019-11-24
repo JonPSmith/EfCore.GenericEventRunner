@@ -5,8 +5,17 @@ using GenericEventRunner.ForEntities;
 
 namespace GenericEventRunner.ForHandlers
 {
+    /// <summary>
+    /// Place this on any event handler that should be called after SaveChanges has updated the database
+    /// </summary>
+    /// <typeparam name="T">This should be the domain event that this handler is looking for</typeparam>
     public interface IAfterSaveEventHandler<in T> where T : IDomainEvent
     {
+        /// <summary>
+        /// This is the method you must define to produce a AfterSave event handler 
+        /// </summary>
+        /// <param name="callingEntity"></param>
+        /// <param name="domainEvent"></param>
         void Handle(EntityEvents callingEntity, T domainEvent);
     }
 }

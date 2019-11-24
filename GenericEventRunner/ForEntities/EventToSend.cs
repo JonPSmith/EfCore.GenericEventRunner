@@ -3,6 +3,9 @@
 
 namespace GenericEventRunner.ForEntities
 {
+    /// <summary>
+    /// This allows you to control which list, the BeforeSave and AfterSave, to add the event to.
+    /// </summary>
     public enum EventToSend
     {
         Before, After, Both
