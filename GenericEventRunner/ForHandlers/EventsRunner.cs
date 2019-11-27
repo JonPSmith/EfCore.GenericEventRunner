@@ -50,7 +50,7 @@ namespace GenericEventRunner.ForHandlers
                 return status;
 
             status.SetResult(callBaseSaveChanges.Invoke());
-            status.CombineStatuses(RunAfterSaveChangesEvents(getTrackedEntities));
+            RunAfterSaveChangesEvents(getTrackedEntities);
             return status;
         }
 
@@ -69,7 +69,7 @@ namespace GenericEventRunner.ForHandlers
                 return status;
 
             status.SetResult(await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false));
-            status.CombineStatuses(RunAfterSaveChangesEvents(getTrackedEntities));
+            RunAfterSaveChangesEvents(getTrackedEntities);
             return status;
         }
 
@@ -118,12 +118,11 @@ namespace GenericEventRunner.ForHandlers
             return status;
         }
 
-        private IStatusGeneric RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        private void RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
         {
-            var status = new StatusGenericHandler();
             if (_config.NotUsingAfterSaveHandlers)
                 //Skip this stage if NotUsingAfterSaveHandlers is true
-                return status;
+                return;
 
             var eventsToRun = new List<EntityAndEvent>();
             foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
@@ -134,11 +133,8 @@ namespace GenericEventRunner.ForHandlers
 
             foreach (var entityAndEvent in eventsToRun)
             {
-                status.CombineStatuses(
-                    _findRunHandlers.RunHandlersForEvent(entityAndEvent, 1,false));
+                _findRunHandlers.RunHandlersForEvent(entityAndEvent, 1, false);
             }
-
-            return status;
         }
 
     }
