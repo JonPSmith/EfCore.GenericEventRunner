@@ -23,7 +23,8 @@ namespace Infrastructure.BeforeEventHandlers
 
         public IStatusGeneric Handle(EntityEvents callingEntity, OrderCreatedEvent domainEvent)
         {
-            domainEvent.SetTaxRatePercent(_rateFinder.GetTaxRateInEffect(domainEvent.ExpectedDispatchDate));
+            var tax = _rateFinder.GetTaxRateInEffect(domainEvent.ExpectedDispatchDate);
+            domainEvent.SetTaxRatePercent(tax);
 
             return null;
         }

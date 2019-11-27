@@ -21,8 +21,8 @@ namespace EntityClasses
         public DateTime DispatchDate { get; private set; }
         public decimal TotalPriceNoTax { get; private set; }
 
-        private decimal _taxRatePercent;
         //Price and tax 
+        private decimal _taxRatePercent;
         public decimal TaxRatePercent
         {
             get => _taxRatePercent;
@@ -34,17 +34,17 @@ namespace EntityClasses
             }
         }
 
+        private void RefreshGrandTotalPrice()
+        {
+            GrandTotalPrice = TotalPriceNoTax * (1 + TaxRatePercent / 100);
+        }
+
         private void SetTaxRatePercent(decimal newValue)
         {
             TaxRatePercent = newValue;
         }
 
         public decimal GrandTotalPrice { get; private set; } // should be set by RefreshGrandTotalPrice method
-
-        private void RefreshGrandTotalPrice()
-        {
-            GrandTotalPrice = TotalPriceNoTax * (1 + TaxRatePercent / 100);
-        }
 
         //----------------------------------------------
         //Relationships 

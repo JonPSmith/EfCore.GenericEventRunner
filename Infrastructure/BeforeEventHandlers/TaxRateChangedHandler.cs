@@ -12,7 +12,9 @@ namespace Infrastructure.BeforeEventHandlers
     {
         public IStatusGeneric Handle(EntityEvents callingEntity, TaxRateChangedEvent domainEvent)
         {
-            domainEvent.RefreshGrandTotalPrice();
+            //do something with the new tax rate
+
+            domainEvent.RefreshGrandTotalPrice();  //example of using Action/Func to set something inside the calling class
 
             return new StatusGenericHandler();
         }
