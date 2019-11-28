@@ -231,7 +231,7 @@ namespace Test.UnitTests.InfrastructureTests
                 context.Add(tax);
 
                 //ATTEMPT
-                tax.AddEvent(new EventTestAfterExceptionHandler(), EventToSend.After);
+                tax.AddEvent(new EventTestAfterExceptionHandler(), EventToSend.AfterSave);
                 var ex = await Assert.ThrowsAsync<ApplicationException>(async () => await context.SaveChangesAsync());
 
                 //VERIFY

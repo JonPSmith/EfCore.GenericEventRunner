@@ -16,7 +16,7 @@ namespace GenericEventRunner.ForDbContext
     public interface IEventsRunner
     {
         /// <summary>
-        /// This Handles the running of the Before Event Handlers
+        /// This Handles the running of the BeforeSave Event Handlers
         /// </summary>
         /// <param name="getTrackedEntities">Func that gets all the tracked entities that inherited the EntityEvents class</param>
         /// <param name="callBaseSaveChanges">This calls the base SaveChanges.</param>
@@ -25,7 +25,7 @@ namespace GenericEventRunner.ForDbContext
             Func<int> callBaseSaveChanges);
 
         /// <summary>
-        /// This Handles the running of the Before Event Handlers
+        /// This Handles the running of the BeforeSave Event Handlers
         /// </summary>
         /// <param name="getTrackedEntities">Func that gets all the tracked entities that inherited the EntityEvents class</param>
         /// <param name="callBaseSaveChangesAsync">This calls the base SaveChangesAsync.</param>

@@ -8,6 +8,17 @@ namespace GenericEventRunner.ForEntities
     /// </summary>
     public enum EventToSend
     {
-        Before, After, Both
+        /// <summary>
+        /// This puts an event into BeforeSaveEvents list
+        /// </summary>
+        BeforeSave,
+        /// <summary>
+        /// This puts an event into AfterSaveEvents list
+        /// </summary>
+        AfterSave,
+        /// <summary>
+        /// This puts an event into both the BeforeSaveEvents list and the AfterSaveEvents list
+        /// </summary>
+        BeforeAndAfterSave
     }
 }

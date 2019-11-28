@@ -188,8 +188,8 @@ I could not accept this order because there wasn't enough Product1 in stock.");
         }
 
         [Theory]
-        [InlineData(EventToSend.Before)]
-        [InlineData(EventToSend.After)]
+        [InlineData(EventToSend.BeforeSave)]
+        [InlineData(EventToSend.AfterSave)]
         public void TestMissingHandlerThrowsException(EventToSend beforeAfter)
         {
 
@@ -205,7 +205,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 var ex = Assert.Throws<GenericEventRunnerException>(() => context.SaveChanges());
 
                 //VERIFY
-                ex.Message.ShouldEqual(beforeAfter == EventToSend.Before
+                ex.Message.ShouldEqual(beforeAfter == EventToSend.BeforeSave
                     ? $"Could not find a BeforeSave event handler for the event {typeof(EventWithNoHandler).Name}."
                     : $"Could not find a AfterSave event handler for the event {typeof(EventWithNoHandler).Name}.");
             }

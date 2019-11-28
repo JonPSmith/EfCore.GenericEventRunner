@@ -77,7 +77,7 @@ namespace EntityClasses
                 throw new InvalidOperationException("You cannot call this method until the Order is written to the database.");
 
             DispatchDate = newDispatchDate;
-            AddEvent(new OrderDispatchedEvent(DispatchDate, SetTaxRatePercent), EventToSend.Both);
+            AddEvent(new OrderDispatchedEvent(DispatchDate, SetTaxRatePercent), EventToSend.BeforeAndAfterSave);
         }
 
     }

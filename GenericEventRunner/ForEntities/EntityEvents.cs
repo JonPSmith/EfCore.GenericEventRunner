@@ -25,11 +25,11 @@ namespace GenericEventRunner.ForEntities
         /// </summary>
         /// <param name="dEvent">This is the domain event you want to sent</param>
         /// <param name="eventToSend">This allows you to send the event to either BeforeSave list, the AfterSave list or both. Default is BeforeSave List</param>
-        public void AddEvent(IDomainEvent dEvent, EventToSend eventToSend = EventToSend.Before)
+        public void AddEvent(IDomainEvent dEvent, EventToSend eventToSend = EventToSend.BeforeSave)
         {
-            if (eventToSend == EventToSend.Before || eventToSend == EventToSend.Both)
+            if (eventToSend == EventToSend.BeforeSave || eventToSend == EventToSend.BeforeAndAfterSave)
                 _beforeSaveEvents.Add(dEvent);
-            if (eventToSend == EventToSend.After || eventToSend == EventToSend.Both)
+            if (eventToSend == EventToSend.AfterSave || eventToSend == EventToSend.BeforeAndAfterSave)
                 _afterSaveChangesEvents.Add(dEvent);
         }
 

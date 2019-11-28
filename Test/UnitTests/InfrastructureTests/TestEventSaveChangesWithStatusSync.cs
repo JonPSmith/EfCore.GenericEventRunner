@@ -230,7 +230,7 @@ namespace Test.UnitTests.InfrastructureTests
                 context.Add(tax);
 
                 //ATTEMPT
-                tax.AddEvent(new EventTestAfterExceptionHandler(), EventToSend.After);
+                tax.AddEvent(new EventTestAfterExceptionHandler(), EventToSend.AfterSave);
                 var ex = Assert.Throws<ApplicationException>(() => context.SaveChangesWithStatus());
 
                 //VERIFY
