@@ -25,7 +25,7 @@ namespace Infrastructure.BeforeEventHandlers
             var status = new StatusGenericHandler();
             var stock = _context.Find<ProductStock>(domainEvent.ProductName);
             if (stock == null)
-                return status.AddError($"could not find the stock for product called {domainEvent.ProductName} ");
+                throw new ApplicationException($"could not find the stock for product called {domainEvent.ProductName} ");
 
             if (stock.NumInStock < domainEvent.NumOrdered)
                 return status.AddError(

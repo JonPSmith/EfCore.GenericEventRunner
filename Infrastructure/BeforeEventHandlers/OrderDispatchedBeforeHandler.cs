@@ -12,7 +12,7 @@ using StatusGeneric;
 
 namespace Infrastructure.BeforeEventHandlers
 {
-    public class OrderDispatchedBeforeHandler : IBeforeSaveEventHandler<OrderDispatchedEvent>
+    public class OrderDispatchedBeforeHandler : IBeforeSaveEventHandler<OrderReadyToDispatchEvent>
     {
         private readonly ExampleDbContext _context;
         private readonly TaxRateLookup _rateFinder;
@@ -23,7 +23,7 @@ namespace Infrastructure.BeforeEventHandlers
             _rateFinder = new TaxRateLookup(context);
         }
 
-        public IStatusGeneric Handle(EntityEvents callingEntity, OrderDispatchedEvent domainEvent)
+        public IStatusGeneric Handle(EntityEvents callingEntity, OrderReadyToDispatchEvent domainEvent)
         {
             var status = new StatusGenericHandler();
             //Update the rate as the date may have changed

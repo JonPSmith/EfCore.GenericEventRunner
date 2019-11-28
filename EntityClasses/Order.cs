@@ -71,13 +71,13 @@ namespace EntityClasses
             }
         }
 
-        public void OrderHasBeenDispatched(DateTime newDispatchDate)
+        public void OrderReadyForDispatch(DateTime newDispatchDate)
         {
             if (OrderId == 0)
                 throw new InvalidOperationException("You cannot call this method until the Order is written to the database.");
 
             DispatchDate = newDispatchDate;
-            AddEvent(new OrderDispatchedEvent(DispatchDate, SetTaxRatePercent), EventToSend.BeforeAndAfterSave);
+            AddEvent(new OrderReadyToDispatchEvent(DispatchDate, SetTaxRatePercent), EventToSend.BeforeAndAfterSave);
         }
 
     }

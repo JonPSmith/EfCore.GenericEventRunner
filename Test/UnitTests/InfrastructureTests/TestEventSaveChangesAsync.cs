@@ -145,7 +145,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 await context.SaveChangesAsync();;
 
                 //ATTEMPT
-                order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
+                order.OrderReadyForDispatch(DateTime.Now.AddDays(10));
                 await context.SaveChangesAsync();;
 
                 //VERIFY
@@ -177,14 +177,14 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 logs.Clear();
 
                 //ATTEMPT
-                order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
+                order.OrderReadyForDispatch(DateTime.Now.AddDays(10));
                 await context.SaveChangesAsync();;
 
                 //VERIFY
                 logs.Count.ShouldEqual(3);
                 logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
                 logs[1].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
-                logs[2].Message.ShouldEqual("A1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
+                logs[2].Message.ShouldEqual("A1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderReadyToDispatchAfterHandler.");
             }
         }
 

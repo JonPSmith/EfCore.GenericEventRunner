@@ -127,7 +127,7 @@ namespace Test.UnitTests.InfrastructureTests
                 context.SaveChanges();
 
                 //ATTEMPT
-                order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
+                order.OrderReadyForDispatch(DateTime.Now.AddDays(10));
                 var status = await context.SaveChangesWithStatusAsync();
 
                 //VERIFY
@@ -160,7 +160,7 @@ namespace Test.UnitTests.InfrastructureTests
                 logs.Clear();
 
                 //ATTEMPT
-                order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
+                order.OrderReadyForDispatch(DateTime.Now.AddDays(10));
                 var status = await context.SaveChangesWithStatusAsync();
 
                 //VERIFY
@@ -168,7 +168,7 @@ namespace Test.UnitTests.InfrastructureTests
                 logs.Count.ShouldEqual(3);
                 logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
                 logs[1].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
-                logs[2].Message.ShouldEqual("A1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
+                logs[2].Message.ShouldEqual("A1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderReadyToDispatchAfterHandler.");
             }
         }
 
