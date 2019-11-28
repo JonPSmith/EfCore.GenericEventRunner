@@ -104,7 +104,7 @@ namespace GenericEventRunner.ForHandlers
                         $" value of {_config.MaxTimesToLookForBeforeEvents}. This implies a circular sets of events. " +
                         "Look at EventsRunner Information logs for more information on what event handlers were running.",
                         eventsToRun.Last().CallingEntity, eventsToRun.Last().DomainEvent);
-            } while (shouldRunAgain && status.IsValid);
+            } while (shouldRunAgain && (status.IsValid || !_config.StopOnFirstBeforeHandlerThatHasAnError));
 
             if (!status.IsValid)
                 //If errors then clear any extra before/after events.

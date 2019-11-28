@@ -7,12 +7,11 @@ using StatusGeneric;
 
 namespace Test.EventsAndHandlers
 {
-    public class BeforeHandlerReturnsErrorStatus : IBeforeSaveEventHandler<EventTestBeforeReturnError>
+    public class BeforeHandlerDoNothing : IBeforeSaveEventHandler<EventDoNothing>
     {
-        public IStatusGeneric Handle(EntityEvents callingEntity, EventTestBeforeReturnError domainEvent)
+        public IStatusGeneric Handle(EntityEvents callingEntity, EventDoNothing domainEvent)
         {
-            callingEntity.AddEvent(new EventDoNothing());
-            return new StatusGenericHandler().AddError("This is a test");
+            return null;
         }
     }
 }

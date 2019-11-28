@@ -275,11 +275,12 @@ I could not accept this order because there wasn't enough Product1 in stock.");
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
             var config = new GenericEventRunnerConfig
             {
                 StopOnFirstBeforeHandlerThatHasAnError = stopOnFirst
             };
-            var context = options.CreateAndSeedDbWithDiForHandlers(config: config);
+            var context = options.CreateAndSeedDbWithDiForHandlers(logs, config);
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -292,6 +293,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 //VERIFY
                 context.StatusFromLastSaveChanges.IsValid.ShouldBeFalse();
                 context.StatusFromLastSaveChanges.Errors.Count.ShouldEqual(stopOnFirst ? 1 : 2);
+                logs.Count.ShouldEqual(stopOnFirst ? 1 : 4);
             }
         }
 
