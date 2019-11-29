@@ -12,7 +12,7 @@ namespace Infrastructure.AfterEventHandlers
     {
         public void Handle(EntityEvents callingEntity, OrderReadyToDispatchEvent domainEvent)
         {
-            //Send message to dispatch that order is 
+            //Send message to dispatch that order has been checked and is ready to go
         }
     }
 }
