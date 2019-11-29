@@ -29,6 +29,7 @@
     <PackageReleaseNotes>
       - First release.
     </PackageReleaseNotes>
+    <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerNuGetIcon128.png</PackageIconUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
