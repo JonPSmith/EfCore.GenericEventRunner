@@ -5,11 +5,25 @@ using System;
 using System.Collections.Generic;
 using DataLayer;
 using EntityClasses;
+using GenericEventRunner.ForSetup;
+using Microsoft.EntityFrameworkCore;
+using TestSupport.EfHelpers;
 
 namespace Test.EfHelpers
 {
     public static class SeedExtensions
     {
+
+        public static ExampleDbContext CreateAndSeedDbWithDiForHandlers<TRunner>(this DbContextOptions<ExampleDbContext> options,
+            List<LogOutput> logs = null, IGenericEventRunnerConfig config = null) where TRunner : class
+        {
+            var context = options.CreateDbWithDiForHandlers<ExampleDbContext, TRunner>(logs, config);
+
+            context.Database.EnsureCreated();
+            context.SeedTaxAndStock();
+
+            return context;
+        }
 
         public static List<ProductStock> SeedTaxAndStock(this ExampleDbContext context)
         {

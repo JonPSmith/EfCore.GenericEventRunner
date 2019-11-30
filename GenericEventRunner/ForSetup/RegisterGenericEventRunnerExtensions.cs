@@ -41,6 +41,8 @@ namespace GenericEventRunner.ForSetup
             IGenericEventRunnerConfig config,
             params Assembly[] assembliesToScan)
         {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+
             if (!assembliesToScan.Any())
                 assembliesToScan = new Assembly[]{ Assembly.GetCallingAssembly()};
 

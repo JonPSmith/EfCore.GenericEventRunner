@@ -11,6 +11,7 @@ using EntityClasses.SupportClasses;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
+using Infrastructure.BeforeEventHandlers;
 using Test.EfHelpers;
 using Test.EventsAndHandlers;
 using TestSupport.EfHelpers;
@@ -27,7 +28,7 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var itemDto = new BasketItemDto
                 {
@@ -55,7 +56,7 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var itemDto = new BasketItemDto
                 {
@@ -81,7 +82,7 @@ namespace Test.UnitTests.InfrastructureTests
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var logs = new List<LogOutput>();
-            var context = options.CreateAndSeedDbWithDiForHandlers(logs);
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
             {
                 var itemDto = new BasketItemDto
                 {
@@ -114,7 +115,7 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var itemDto = new BasketItemDto
                 {
@@ -146,7 +147,7 @@ namespace Test.UnitTests.InfrastructureTests
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var logs = new List<LogOutput>();
-            var context = options.CreateAndSeedDbWithDiForHandlers(logs);
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
             {
                 var itemDto = new BasketItemDto
                 {
@@ -177,7 +178,7 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -202,7 +203,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 StopOnFirstBeforeHandlerThatHasAnError = stopOnFirst
             };
-            var context = options.CreateAndSeedDbWithDiForHandlers(config: config);
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(config: config);
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -224,7 +225,7 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
