@@ -21,14 +21,14 @@ namespace Test.EfHelpers
         /// the event handlers in the assembly that the TRunner class is in. 
         /// </summary>
         /// <typeparam name="TContext">Your DbContext type</typeparam>
-        /// <typeparam name="TRunner">The type of one of your event handlers.
+        /// <typeparam name="THandler">The type of one of your event handlers.
         /// The whole assembly that the TRunner is in will be scanned for event handlers</typeparam>
         /// <param name="options">The <code>T:DbContextOptions{TContext}</code> for your DbContext</param>
         /// <param name="logs">Optional. If provided the it uses the EfCore.TestSupport logging provider to return logs</param>
         /// <param name="config">Optional. Allows you to change the configuration setting for GenericEventRunner</param>
         /// <returns>An instance of the DbContext created by DI and therefore containing the EventsRunner</returns>
-        public static TContext CreateDbWithDiForHandlers<TContext, TRunner>(this DbContextOptions<TContext> options,
-            List<LogOutput> logs = null, IGenericEventRunnerConfig config = null) where TContext : DbContext where TRunner : class
+        public static TContext CreateDbWithDiForHandlers<TContext, THandler>(this DbContextOptions<TContext> options,
+            List<LogOutput> logs = null, IGenericEventRunnerConfig config = null) where TContext : DbContext where THandler : class
         {
             var services = new ServiceCollection();
             if (logs != null)
@@ -42,7 +42,7 @@ namespace Test.EfHelpers
 
             var assembliesToScan = new Assembly[]
             {
-                Assembly.GetAssembly(typeof(TRunner)),
+                Assembly.GetAssembly(typeof(THandler)),
                 Assembly.GetExecutingAssembly()         //This will pick up any event handlers in your unit tests assembly
             };
 

@@ -6,6 +6,9 @@ This is an open source project (MIT license) available on GitHub at https://gith
 
 ## Useful articles
 
-Coming soon!
+* [Article about this event-driven architecture](https://www.thereformedprogrammer.net/a-robust-event-driven-architecture-for-using-with-entity-framework-core/) - good to get an idea of what the library is trying to do.
+* [Detailed article going though the how and why of the EfCore.GenericEventRunner library](https://www.thereformedprogrammer.net/efcore-genericeventrunner-an-event-driven-library-that-works-with-ef-core/)
+
+
 
 
