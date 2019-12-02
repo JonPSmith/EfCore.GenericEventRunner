@@ -6,9 +6,9 @@ using GenericEventRunner.ForEntities;
 
 namespace EntityClasses.DomainEvents
 {
-    public class OrderDispatchedEvent : IDomainEvent
+    public class OrderReadyToDispatchEvent : IDomainEvent
     {
-        public OrderDispatchedEvent(DateTime actualDispatchDate, Action<decimal> setTaxRatePercent)
+        public OrderReadyToDispatchEvent(DateTime actualDispatchDate, Action<decimal> setTaxRatePercent)
         {
             ActualDispatchDate = actualDispatchDate;
             SetTaxRatePercent = setTaxRatePercent;

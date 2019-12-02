@@ -3,6 +3,10 @@
 
 namespace GenericEventRunner.ForSetup
 {
+    /// <summary>
+    /// This holds the configuration settings for the GenericEventRunner
+    /// NOTE: This is registered as a singleton, i.e. the values cannot be changes dynamically
+    /// </summary>
     public class GenericEventRunnerConfig : IGenericEventRunnerConfig
     {
         /// <summary>
@@ -19,25 +23,12 @@ namespace GenericEventRunner.ForSetup
         public bool NotUsingAfterSaveHandlers { get; set; }
 
         /// <summary>
-        /// If a handler throws an exception when SaveChangesWithStatus/Async is called and this property is true,
-        ///    then the Exception will be turned into a IStatusGeneric status
-        /// a) For BeforeSave event handlers an error is added to the status
-        /// b) For AfterSave event handlers the IStatusGeneric Message is changed to say that the database was updated, but an AfterSave handler failed
+        /// If true (which is the default value) then the first BeforeSave event handler that returns an error will stop the event runner.
+        /// The use cases for each setting is:
+        /// true:  Once you have a error, then its not worth going on so stopping quickly is good.
+        /// false: If your events have a lot of different checks then this setting gets all the possible errors.
+        /// NOTE: Because this is very event-specific you can override this on a per-handler basis via the EventHandlerConfig Attribute
         /// </summary>
-        public bool TurnHandlerExceptionsToErrorStatus { get; set; } = true;
-
-        /// <summary>
-        /// If TurnHandlerExceptionsToErrorStatus is true and a BeforeSave event handlers has an exception, then this message will be added as an error in the status.
-        /// NOTE: The EventHandlerConfigAttribute.ExceptionErrorString overrides this
-        /// </summary>
-        public string DefaultBeforeSaveExceptionErrorString { get; set; } =
-            "There was a system error. If this persists then please contact us.";
-
-        /// <summary>
-        /// If TurnHandlerExceptionsToErrorStatus is true and an AfterSave event handlers has an exception, then this message will added to the end of the status message.
-        /// The prefix of the message is "Successfully saved, but ". 
-        /// NOTE: The EventHandlerConfigAttribute.ExceptionErrorString overrides this
-        /// </summary>
-        public string DefaultAfterSaveMessageSuffix { get; set; } = "it failed to sent a update report.";
+        public bool StopOnFirstBeforeHandlerThatHasAnError { get; set; } = true;
     }
 }

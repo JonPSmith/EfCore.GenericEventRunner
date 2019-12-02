@@ -6,14 +6,26 @@ using GenericEventRunner.ForEntities;
 
 namespace GenericEventRunner.ForHandlers
 {
+    /// <summary>
+    /// This is used to report any problems in the GenericEventRunner
+    /// </summary>
     public class GenericEventRunnerException : Exception
     {
-
+        /// <summary>
+        /// This creates an exception just with a message
+        /// </summary>
+        /// <param name="message"></param>
         public GenericEventRunnerException(string message)
             : base(message)
         {
         }
 
+        /// <summary>
+        /// This allows you to create an exception with the callingEntity and domainEvent type names
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="callingEntity"></param>
+        /// <param name="domainEvent"></param>
         public GenericEventRunnerException(string message, EntityEvents callingEntity, IDomainEvent domainEvent)
             : base(message)
         {

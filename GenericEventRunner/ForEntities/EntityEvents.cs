@@ -15,30 +15,43 @@ namespace GenericEventRunner.ForEntities
         //Events are created within a single DBContext and are cleared every time SaveChanges/SaveChangesAsync is called
         
         //This holds events that are run before SaveChanges is called
-        internal List<IDomainEvent> BeforeSaveEvents { get; private set; } = new List<IDomainEvent>();
+        private readonly List<IDomainEvent> _beforeSaveEvents = new List<IDomainEvent>();
 
         //This holds events that are run after SaveChanges finishes successfully
-        internal List<IDomainEvent> AfterSaveChangesEvents { get; private set; } = new List<IDomainEvent>();
+        private readonly List<IDomainEvent> _afterSaveChangesEvents  = new List<IDomainEvent>();
 
-        public void AddEvent(IDomainEvent dEvent, EventToSend eventToSend = EventToSend.Before)
+        /// <summary>
+        /// This allows an entity to add an event to this class
+        /// </summary>
+        /// <param name="dEvent">This is the domain event you want to sent</param>
+        /// <param name="eventToSend">This allows you to send the event to either BeforeSave list, the AfterSave list or both. Default is BeforeSave List</param>
+        public void AddEvent(IDomainEvent dEvent, EventToSend eventToSend = EventToSend.BeforeSave)
         {
-            if (eventToSend == EventToSend.Before || eventToSend == EventToSend.Both)
-                BeforeSaveEvents.Add(dEvent);
-            if (eventToSend == EventToSend.After || eventToSend == EventToSend.Both)
-                AfterSaveChangesEvents.Add(dEvent);
+            if (eventToSend == EventToSend.BeforeSave || eventToSend == EventToSend.BeforeAndAfterSave)
+                _beforeSaveEvents.Add(dEvent);
+            if (eventToSend == EventToSend.AfterSave || eventToSend == EventToSend.BeforeAndAfterSave)
+                _afterSaveChangesEvents.Add(dEvent);
         }
 
+        /// <summary>
+        /// This gets all the events in the BeforeSaveEvents list, and clears that list at the same time
+        /// </summary>
+        /// <returns></returns>
         public ICollection<IDomainEvent> GetBeforeSaveEventsThenClear()
         {
-            var eventCopy = BeforeSaveEvents.ToList();
-            BeforeSaveEvents.Clear();
+            var eventCopy = _beforeSaveEvents.ToList();
+            _beforeSaveEvents.Clear();
             return eventCopy;
         }
 
+        /// <summary>
+        /// This gets all the events in the AfterSaveEvents list, and clears that list at the same time
+        /// </summary>
+        /// <returns></returns>
         public ICollection<IDomainEvent> GetAfterSaveEventsThenClear()
         {
-            var eventCopy = AfterSaveChangesEvents.ToList();
-            AfterSaveChangesEvents.Clear();
+            var eventCopy = _afterSaveChangesEvents.ToList();
+            _afterSaveChangesEvents.Clear();
             return eventCopy;
         }
     }

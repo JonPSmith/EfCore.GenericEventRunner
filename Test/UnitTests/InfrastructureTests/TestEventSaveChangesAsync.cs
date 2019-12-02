@@ -9,8 +9,11 @@ using DataLayer;
 using EntityClasses;
 using EntityClasses.DomainEvents;
 using EntityClasses.SupportClasses;
+using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers;
+using GenericEventRunner.ForSetup;
+using Infrastructure.BeforeEventHandlers;
 using Test.EfHelpers;
 using Test.EventsAndHandlers;
 using TestSupport.EfHelpers;
@@ -22,11 +25,11 @@ namespace Test.UnitTests.InfrastructureTests
     public class TestEventSaveChangesAsync
     {
         [Fact]
-        public async Task TestCreateOrderCheckEventsProduced()
+        public void TestCreateOrderCheckEventsProduced()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var itemDto = new BasketItemDto
                 {
@@ -50,7 +53,7 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var itemDto = new BasketItemDto
                 {
@@ -77,7 +80,7 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var itemDto = new BasketItemDto
                 {
@@ -89,10 +92,10 @@ namespace Test.UnitTests.InfrastructureTests
                 //ATTEMPT
                 var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
                 context.Add(order);
-                var ex = await Assert.ThrowsAsync<GenericEventRunnerException>(async () => await context.SaveChangesAsync());
+                var ex = await Assert.ThrowsAsync<GenericEventRunnerStatusException>(async () => await context.SaveChangesAsync());
 
                 //VERIFY
-                ex.Message.ShouldEqual(@"Problem when writing to the database: Failed with 1 error
+                ex.Message.ShouldEqual(@"Failed with 1 error
 I could not accept this order because there wasn't enough Product1 in stock.");
             }
         }
@@ -103,7 +106,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var logs = new List<LogOutput>();
-            var context = options.CreateAndSeedDbWithDiForHandlers(logs);
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
             {
                 var itemDto = new BasketItemDto
                 {
@@ -119,9 +122,9 @@ I could not accept this order because there wasn't enough Product1 in stock.");
 
                 //VERIFY
                 logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
-                logs[1].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
-                logs[2].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
+                logs[1].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
+                logs[2].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
             }
         }
 
@@ -130,7 +133,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var itemDto = new BasketItemDto
                 {
@@ -143,7 +146,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 await context.SaveChangesAsync();;
 
                 //ATTEMPT
-                order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
+                order.OrderReadyForDispatch(DateTime.Now.AddDays(10));
                 await context.SaveChangesAsync();;
 
                 //VERIFY
@@ -161,7 +164,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var logs = new List<LogOutput>();
-            var context = options.CreateAndSeedDbWithDiForHandlers(logs);
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
             {
                 var itemDto = new BasketItemDto
                 {
@@ -175,26 +178,26 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 logs.Clear();
 
                 //ATTEMPT
-                order.OrderHasBeenDispatched(DateTime.Now.AddDays(10));
+                order.OrderReadyForDispatch(DateTime.Now.AddDays(10));
                 await context.SaveChangesAsync();;
 
                 //VERIFY
                 logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
-                logs[1].Message.ShouldEqual("About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
-                logs[2].Message.ShouldEqual("About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderDispatchedAfterHandler.");
+                logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
+                logs[1].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs[2].Message.ShouldEqual("A1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderReadyToDispatchAfterHandler.");
             }
         }
 
         [Theory]
-        [InlineData(EventToSend.Before)]
-        [InlineData(EventToSend.After)]
+        [InlineData(EventToSend.BeforeSave)]
+        [InlineData(EventToSend.AfterSave)]
         public async Task TestMissingHandlerThrowsException(EventToSend beforeAfter)
         {
 
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -204,7 +207,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 var ex = await Assert.ThrowsAsync<GenericEventRunnerException>(async () => await context.SaveChangesAsync());
 
                 //VERIFY
-                ex.Message.ShouldEqual(beforeAfter == EventToSend.Before
+                ex.Message.ShouldEqual(beforeAfter == EventToSend.BeforeSave
                     ? $"Could not find a BeforeSave event handler for the event {typeof(EventWithNoHandler).Name}."
                     : $"Could not find a AfterSave event handler for the event {typeof(EventWithNoHandler).Name}.");
             }
@@ -215,7 +218,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -234,7 +237,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -253,7 +256,7 @@ I could not accept this order because there wasn't enough Product1 in stock.");
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
             {
                 var tax = new TaxRate(DateTime.Now, 6);
                 context.Add(tax);
@@ -263,7 +266,34 @@ I could not accept this order because there wasn't enough Product1 in stock.");
                 var ex = await Assert.ThrowsAsync<GenericEventRunnerException>(async () => await context.SaveChangesAsync());
 
                 //VERIFY
-                ex.Message.ShouldEqual("The BeforeSave event loop exceeded the config's MaxTimesToLookForBeforeEvents value of 6. This implies a circular sets of events.");
+                ex.Message.ShouldStartWith("The BeforeSave event loop exceeded the config's MaxTimesToLookForBeforeEvents value of 6.");
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task TestStopOnFirstBeforeHandlerThatHasAnError(bool stopOnFirst)
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var config = new GenericEventRunnerConfig
+            {
+                StopOnFirstBeforeHandlerThatHasAnError = stopOnFirst
+            };
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(config: config);
+            {
+                var tax = new TaxRate(DateTime.Now, 6);
+                context.Add(tax);
+
+                //ATTEMPT
+                tax.AddEvent(new EventTestBeforeReturnError());
+                tax.AddEvent(new EventTestBeforeReturnError());
+                var ex = await Assert.ThrowsAsync<GenericEventRunnerStatusException>(async () => await context.SaveChangesAsync());
+
+                //VERIFY
+                context.StatusFromLastSaveChanges.IsValid.ShouldBeFalse();
+                context.StatusFromLastSaveChanges.Errors.Count.ShouldEqual(stopOnFirst ? 1 : 2);
             }
         }
 

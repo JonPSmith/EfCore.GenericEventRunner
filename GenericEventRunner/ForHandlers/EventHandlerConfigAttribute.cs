@@ -6,24 +6,24 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GenericEventRunner.ForHandlers
 {
+    /// <summary>
+    /// TYou can add this attribute to a event handler to override some of the default or configuration settings
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class EventHandlerConfigAttribute : Attribute
     {
         /// <summary>
         /// This allows you to alter some of the aspects of a handler
         /// </summary>
-        /// <param name="exceptionErrorString">If set then a) an exception will be turned into a status, and b) the error message will use this string
-        /// a) BeforeSave handlers: this string will be used in an error message.
-        /// b) AfterSave handlers: this string is added to the end of the message, which starts with "Successfully saved, but "</param>
-        /// <param name="handlerLifetime"></param>
-        public EventHandlerConfigAttribute(string exceptionErrorString = null, ServiceLifetime handlerLifetime = ServiceLifetime.Transient)
+        /// <param name="handlerLifetime">This controls the lifetime of a handler when registered in the DI. Default = Transient</param>
+        public EventHandlerConfigAttribute(ServiceLifetime handlerLifetime = ServiceLifetime.Transient)
         {
-            ExceptionErrorString = exceptionErrorString;
             HandlerLifetime = handlerLifetime;
         }
 
-        public string ExceptionErrorString { get; }
-
+        /// <summary>
+        /// This holds the Lifetime of the class when created by via DI
+        /// </summary>
         public ServiceLifetime HandlerLifetime { get; } 
 
     }
