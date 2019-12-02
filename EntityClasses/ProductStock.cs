@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
+using System.ComponentModel.DataAnnotations;
+
 namespace EntityClasses
 {
     public class ProductStock 
@@ -16,6 +18,10 @@ namespace EntityClasses
 
         public int NumInStock { get; set; }
 
+        /// <summary>
+        /// This is used for checking the handling of concurrency issues.
+        /// </summary>
+        [ConcurrencyCheck]
         public int NumAllocated { get; set; }
     }
 }

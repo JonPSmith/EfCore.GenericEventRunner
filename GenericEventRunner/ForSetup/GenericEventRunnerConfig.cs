@@ -1,6 +1,10 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
+using System;
+using Microsoft.EntityFrameworkCore;
+using StatusGeneric;
+
 namespace GenericEventRunner.ForSetup
 {
     /// <summary>
@@ -30,5 +34,14 @@ namespace GenericEventRunner.ForSetup
         /// NOTE: Because this is very event-specific you can override this on a per-handler basis via the EventHandlerConfig Attribute
         /// </summary>
         public bool StopOnFirstBeforeHandlerThatHasAnError { get; set; } = true;
+
+        /// <summary>
+        /// When SaveChangesWithValidation is called if there is an exception then this method is called (if present)
+        /// a) If it returns null then the error is rethrown
+        /// b) If it returns a status with errors then those are combined into the GenericEventRunner status
+        /// c) If it returns a valid status (i.e. no errors) then it calls SaveChanges again, which might create another exception
+        /// Item b) is useful for turning SQL errors into user-friendly error message, and c) is good for handling a DbUpdateConcurrencyException
+        /// </summary>
+        public Func<Exception, DbContext, IStatusGeneric> SaveChangesExceptionHandler { get; set; }
     }
 }

@@ -9,6 +9,7 @@ using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers.Internal;
 using GenericEventRunner.ForSetup;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using StatusGeneric;
@@ -16,7 +17,8 @@ using StatusGeneric;
 namespace GenericEventRunner.ForHandlers
 {
     /// <summary>
-    /// The EventsRunner has the lifetime of the DbContext, i.e. its Scoped
+    /// This is the class that will be injected into the DbContext to handle events
+    /// NOTE: The EventsRunner has the lifetime of the DbContext, i.e. its Scoped
     /// </summary>
     public class EventsRunner : IEventsRunner
     {
@@ -38,10 +40,11 @@ namespace GenericEventRunner.ForHandlers
         /// <summary>
         /// This runs the events before and after the base SaveChanges method is run
         /// </summary>
+        /// <param name="context">The current DbContext</param>
         /// <param name="getTrackedEntities">A function to get the tracked entities</param>
         /// <param name="callBaseSaveChanges">A function that is linked to the base SaveChanges in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
+        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
             Func<int> callBaseSaveChanges)
         {
             var status = new StatusGenericHandler<int>();
@@ -49,7 +52,26 @@ namespace GenericEventRunner.ForHandlers
             if (!status.IsValid) 
                 return status;
 
-            status.SetResult(callBaseSaveChanges.Invoke());
+            //Call SaveChanges with catch for exception handler
+            do
+            {
+                try
+                {
+                    status.SetResult(callBaseSaveChanges.Invoke());
+                    break; //This breaks out of the do/while
+                }
+                catch (Exception e)
+                {
+                    var exceptionStatus = _config.SaveChangesExceptionHandler?.Invoke(e, context);
+                    if (exceptionStatus == null)
+                        //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
+                        throw;
+                    //SaveChangesExceptionHandler ran, so combine its error into the outer status
+                    status.CombineStatuses(exceptionStatus);
+                }
+                //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
+            } while (status.IsValid);
+
             RunAfterSaveChangesEvents(getTrackedEntities);
             return status;
         }
@@ -57,10 +79,11 @@ namespace GenericEventRunner.ForHandlers
         /// <summary>
         /// This runs the events before and after the base SaveChangesAsync method is run
         /// </summary>
+        /// <param name="context">The current DbContext</param>
         /// <param name="getTrackedEntities">A function to get the tracked entities</param>
         /// <param name="callBaseSaveChangesAsync">A function that is linked to the base SaveChangesAsync in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
+        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context, Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
             Func<Task<int>> callBaseSaveChangesAsync)
         {
             var status = new StatusGenericHandler<int>();
@@ -68,13 +91,33 @@ namespace GenericEventRunner.ForHandlers
             if (!status.IsValid)
                 return status;
 
-            status.SetResult(await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false));
+            //Call SaveChangesAsync with catch for exception handler
+            do
+            {
+                try
+                {
+                    status.SetResult(await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false));
+                    break; //This breaks out of the do/while
+                }
+                catch (Exception e)
+                {
+                    var exceptionStatus = _config.SaveChangesExceptionHandler?.Invoke(e, context);
+                    if (exceptionStatus == null)
+                        //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
+                        throw;
+                    //SaveChangesExceptionHandler ran, so combine its error into the outer status
+                    status.CombineStatuses(exceptionStatus);
+                }
+                //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
+            } while (status.IsValid);
             RunAfterSaveChangesEvents(getTrackedEntities);
             return status;
         }
 
-        private IStatusGeneric RunBeforeSaveChangesEvents(
-            Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        //------------------------------------------
+        // private methods
+
+        private IStatusGeneric RunBeforeSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
         {
             var status = new StatusGenericHandler();
 
