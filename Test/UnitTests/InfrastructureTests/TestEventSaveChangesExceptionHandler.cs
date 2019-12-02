@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using DataLayer;
 using EntityClasses;
 using GenericEventRunner.ForSetup;
@@ -75,6 +76,31 @@ namespace Test.UnitTests.InfrastructureTests
                 context.Database.ExecuteSqlRaw(
                     "UPDATE ProductStocks SET NumAllocated = @p0 WHERE ProductName = @p1", 3, stock.ProductName);
                 context.SaveChanges();
+
+                //VERIFY
+                var foundStock = context.Find<ProductStock>(stock.ProductName);
+                foundStock.NumAllocated.ShouldEqual(5);
+            }
+        }
+
+        [Fact]
+        public async Task TestUpdateProductStockConcurrencyWithHandlerAsync()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var config = new GenericEventRunnerConfig
+            {
+                SaveChangesExceptionHandler = CatchAndFixConcurrencyException
+            };
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(config: config);
+            {
+                var stock = context.ProductStocks.OrderBy(x => x.NumInStock).First();
+
+                //ATTEMPT
+                stock.NumAllocated = 2;
+                context.Database.ExecuteSqlRaw(
+                    "UPDATE ProductStocks SET NumAllocated = @p0 WHERE ProductName = @p1", 3, stock.ProductName);
+                await context.SaveChangesAsync();
 
                 //VERIFY
                 var foundStock = context.Find<ProductStock>(stock.ProductName);
