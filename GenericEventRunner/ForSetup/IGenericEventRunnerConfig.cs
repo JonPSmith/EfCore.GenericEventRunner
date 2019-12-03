@@ -36,9 +36,9 @@ namespace GenericEventRunner.ForSetup
 
         /// <summary>
         /// When SaveChangesWithValidation is called if there is an exception then this method is called (if present)
-        /// a) If it returns null then the error is rethrown
-        /// b) If it returns a status with errors then those are combined into the GenericEventRunner status
-        /// c) If it returns a valid status (i.e. no errors) then it calls SaveChanges again, which might create another exception
+        /// a) If it returns null then the error is rethrown. This means the exception handler can't handle that exception.
+        /// b) If it returns a status with errors then those are combined into the GenericEventRunner status.
+        /// c) If it returns a valid status (i.e. no errors) then it calls SaveChanges again, still with exception capture.
         /// Item b) is useful for turning SQL errors into user-friendly error message, and c) is good for handling a DbUpdateConcurrencyException
         /// </summary>
         Func<Exception, DbContext, IStatusGeneric> SaveChangesExceptionHandler { get; }
