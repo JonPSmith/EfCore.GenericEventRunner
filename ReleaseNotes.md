@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.0
+
+- Added IStatusFromLastSaveChanges interface to make it easier to get to the Status if you capture the GenericEventRunnerStatusException
+
 ## 1.1.0
 
 - Added SaveChangesExceptionHandler to configuration. Used for handling concurrency issues etc.   

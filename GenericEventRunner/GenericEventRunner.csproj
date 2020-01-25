@@ -11,10 +11,10 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>1.1.0</PackageVersion>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <PackageVersion>1.2.0</PackageVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <PackageId>EfCore.GenericEventRunner</PackageId>
     <Authors>Jon P Smith</Authors>
     <Company>Selective Analytics</Company>
@@ -27,7 +27,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      - Added SaveChangesExceptionHandler to configuration. Used for handling database exceptions.
+      - Added IStatusFromLastSaveChanges interface to make it easier to get to the Status if you capture the GenericEventRunnerStatusException
     </PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerNuGetIcon128.png</PackageIconUrl>
   </PropertyGroup>

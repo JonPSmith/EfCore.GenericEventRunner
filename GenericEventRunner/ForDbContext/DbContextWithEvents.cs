@@ -19,7 +19,7 @@ namespace GenericEventRunner.ForDbContext
     /// If you don't like inheriting this class then you can copy this code directly into your own DbContext
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class DbContextWithEvents<T> : DbContext where T : DbContext
+    public class DbContextWithEvents<T> : DbContext, IStatusFromLastSaveChanges where T : DbContext  
     {
         private readonly IEventsRunner _eventsRunner;
 
