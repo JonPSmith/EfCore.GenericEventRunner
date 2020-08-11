@@ -22,9 +22,9 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      - First version. Defines three basic interfaces for EfCore.GenericEventRunner when implementing a Clean Code architecture
+      - First version. Defines class + interface for EfCore.GenericEventRunner when implementing a Clean Code architecture
     </PackageReleaseNotes>
-    <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerNuGetIcon128.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerDomainNuGetIcon128.png</PackageIconUrl>
   </PropertyGroup>
 
 </Project>

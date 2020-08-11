@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using GenericEventRunner.ForSetup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,11 +17,15 @@ namespace GenericEventRunner.ForHandlers.Internal
         private readonly ILogger _logger;
         private readonly IGenericEventRunnerConfig _config;
 
+        private FindHandlers _findHandlers;
+
         public FindRunHandlers(IServiceProvider serviceProvider, ILogger logger, IGenericEventRunnerConfig config)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
             _config = config;
+
+            _findHandlers = new FindHandlers(serviceProvider, logger);
         }
 
         /// <summary>
@@ -29,23 +34,19 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// <param name="entityAndEvent"></param>
         /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
+        /// <param name="useAsyncIfFound">True if called by an async </param>
         /// <returns>Returns status with </returns>
-        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave)
+        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave, bool useAsyncIfFound)
         {
             var status = new StatusGenericHandler
             {
                 Message = "Successfully saved."
             };
-
             var eventType = entityAndEvent.DomainEvent.GetType();
-            var handlerInterface = (beforeSave ? typeof(IBeforeSaveEventHandler<>) : typeof(IAfterSaveEventHandler<>))
-                .MakeGenericType(eventType);
-            var wrapperType = (beforeSave ? typeof(BeforeSaveHandler<>) : typeof(AfterSaveHandler<>))
-                .MakeGenericType(eventType);
-            var handlers = _serviceProvider.GetServices(handlerInterface).ToList();
 
+            var handlersAndWrappers = _findHandlers.GetHandlers(eventType, beforeSave, useAsyncIfFound);
             var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
-            if (!handlers.Any())
+            if (!handlersAndWrappers.Any())
             {
                 _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.");
                 throw new GenericEventRunnerException(
@@ -53,20 +54,20 @@ namespace GenericEventRunner.ForHandlers.Internal
                     entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
             }
 
-            foreach (var handler in handlers)
+            foreach (var handlerWrapper in handlersAndWrappers)
             {
 
-                _logger.LogInformation($"{beforeAfter[0]}{loopCount}: About to run a {beforeAfter} event handler {handler.GetType().FullName}.");
+                _logger.LogInformation($"{beforeAfter[0]}{loopCount}: About to run a {beforeAfter} event handler {handlerWrapper.EventHandler.GetType().FullName}.");
                 if (beforeSave)
                 {
-                    var wrappedHandler = (BeforeSaveEventHandler) Activator.CreateInstance(wrapperType, handler);
+                    var wrappedHandler = (BeforeSaveEventHandler) Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler);
                     var handlerStatus = wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                     if (handlerStatus != null)
                         status.CombineStatuses(handlerStatus);
                 }
                 else
                 {
-                    var wrappedHandler = (AfterSaveEventHandler) Activator.CreateInstance(wrapperType, handler);
+                    var wrappedHandler = (AfterSaveEventHandler) Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler);
                     wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                 }
             }

@@ -138,7 +138,7 @@ namespace GenericEventRunner.ForHandlers
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    status.CombineStatuses( _findRunHandlers.RunHandlersForEvent(entityAndEvent, loopCount, true));
+                    status.CombineStatuses( _findRunHandlers.RunHandlersForEvent(entityAndEvent, loopCount, true, false));
                     if (!status.IsValid && _config.StopOnFirstBeforeHandlerThatHasAnError)
                         break;
                 }
@@ -177,7 +177,7 @@ namespace GenericEventRunner.ForHandlers
 
             foreach (var entityAndEvent in eventsToRun)
             {
-                _findRunHandlers.RunHandlersForEvent(entityAndEvent, 1, false);
+                _findRunHandlers.RunHandlersForEvent(entityAndEvent, 1, false, false);
             }
         }
 
