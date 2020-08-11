@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using EntityClasses.DomainEvents;
 using EntityClasses.SupportClasses;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 
 namespace EntityClasses
 {
-    public class Order : EntityEvents
+    public class Order : EntityEventsBase
     {
         private HashSet<LineItem> _LineItems;
 

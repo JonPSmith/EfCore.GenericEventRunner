@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using DataLayer;
 using EntityClasses;
 using EntityClasses.SupportClasses;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;

@@ -1,13 +1,13 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
     internal abstract class AfterSaveEventHandler
     {
-        public abstract void Handle(EntityEvents callingEntity, IDomainEvent domainEvent);
+        public abstract void Handle(EntityEventsBase callingEntity, IDomainEvent domainEvent);
     }
 
     internal class AfterSaveHandler<T> : AfterSaveEventHandler
@@ -20,7 +20,7 @@ namespace GenericEventRunner.ForHandlers.Internal
             _handler = handler;
         }
 
-        public override void Handle(EntityEvents callingEntity, IDomainEvent domainEvent)
+        public override void Handle(EntityEventsBase callingEntity, IDomainEvent domainEvent)
         {
             _handler.Handle(callingEntity, (T)domainEvent);
         }

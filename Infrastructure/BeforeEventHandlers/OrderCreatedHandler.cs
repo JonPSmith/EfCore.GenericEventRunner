@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using DataLayer;
 using EntityClasses.DomainEvents;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForHandlers;
 using Infrastructure.BeforeEventHandlers.Internal;
 using StatusGeneric;
@@ -21,7 +21,7 @@ namespace Infrastructure.BeforeEventHandlers
             _rateFinder = new TaxRateLookup(context);
         }
 
-        public IStatusGeneric Handle(EntityEvents callingEntity, OrderCreatedEvent domainEvent)
+        public IStatusGeneric Handle(EntityEventsBase callingEntity, OrderCreatedEvent domainEvent)
         {
             var tax = _rateFinder.GetTaxRateInEffect(domainEvent.ExpectedDispatchDate);
             domainEvent.SetTaxRatePercent(tax);

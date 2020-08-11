@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageVersion>2.0.0-preview003</PackageVersion>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <PackageId>EfCore.GenericEventRunner.DomainParts</PackageId>
+    <Authors>Jon P Smith</Authors>
+    <Company>Selective Analytics</Company>
+    <Product>EfCore.GenericEventRunner.DomainParts</Product>
+    <Description>Defines three interfaces for EfCore.GenericEventRunner when using Clean Code architecture.</Description>
+    <Copyright>Copyright (c) 2020 Jon P Smith</Copyright>
+    <PackageLicenseUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
+    <PackageReleaseNotes>
+      - First version. Defines three basic interfaces for EfCore.GenericEventRunner when implementing a Clean Code architecture
+    </PackageReleaseNotes>
+    <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerNuGetIcon128.png</PackageIconUrl>
+  </PropertyGroup>
+
+</Project>

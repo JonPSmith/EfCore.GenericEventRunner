@@ -5,20 +5,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EfCore.GenericEventRunner.DomainParts" Version="2.0.0-preview003" />
     <PackageReference Include="GenericServices.StatusGeneric" Version="1.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>1.2.0</PackageVersion>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
+    <PackageVersion>2.0.0-preview001</PackageVersion>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <PackageId>EfCore.GenericEventRunner</PackageId>
     <Authors>Jon P Smith</Authors>
     <Company>Selective Analytics</Company>
-    <Product>GenericServices.StatusGeneric</Product>
+    <Product>EfCore.GenericEventRunner</Product>
     <Description>A library to provide domain event handling to EF Core.</Description>
     <Copyright>Copyright (c) 2019 Jon P Smith</Copyright>
     <PackageLicenseUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/LICENSE</PackageLicenseUrl>

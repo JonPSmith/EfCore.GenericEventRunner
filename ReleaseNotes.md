@@ -1,5 +1,12 @@
 # Release notes
 
+## 2.0.0
+
+- Make GenericEventRunner support a clean archtecture
+   - Add IEventType to GenericEventRunner class and registering
+   - Config has GetBeforeSaveEventsThenClear/GetAfterSaveEventsThenClear funcs
+- Add Async event handlers
+
 ## 1.2.0
 
 - Added IStatusFromLastSaveChanges interface to make it easier to get to the Status if you capture the GenericEventRunnerStatusException

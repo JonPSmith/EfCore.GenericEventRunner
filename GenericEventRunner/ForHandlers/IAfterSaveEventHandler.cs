@@ -1,7 +1,7 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 
 namespace GenericEventRunner.ForHandlers
 {
@@ -16,6 +16,6 @@ namespace GenericEventRunner.ForHandlers
         /// </summary>
         /// <param name="callingEntity"></param>
         /// <param name="domainEvent"></param>
-        void Handle(EntityEvents callingEntity, T domainEvent);
+        void Handle(EntityEventsBase callingEntity, T domainEvent);
     }
 }

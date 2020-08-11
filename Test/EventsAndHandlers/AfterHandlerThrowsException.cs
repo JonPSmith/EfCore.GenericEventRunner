@@ -2,14 +2,14 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForHandlers;
 
 namespace Test.EventsAndHandlers
 {
     public class AfterHandlerThrowsException : IAfterSaveEventHandler<EventTestAfterExceptionHandler>
     {
-        public void Handle(EntityEvents callingEntity, EventTestAfterExceptionHandler domainEvent)
+        public void Handle(EntityEventsBase callingEntity, EventTestAfterExceptionHandler domainEvent)
         {
             throw new ApplicationException(nameof(AfterHandlerThrowsException));
         }

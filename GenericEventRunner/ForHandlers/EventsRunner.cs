@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForDbContext;
-using GenericEventRunner.ForEntities;
 using GenericEventRunner.ForHandlers.Internal;
 using GenericEventRunner.ForSetup;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +44,7 @@ namespace GenericEventRunner.ForHandlers
         /// <param name="getTrackedEntities">A function to get the tracked entities</param>
         /// <param name="callBaseSaveChanges">A function that is linked to the base SaveChanges in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities,  
+        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities,  
             Func<int> callBaseSaveChanges)
         {
             var status = new StatusGenericHandler<int>();
@@ -83,7 +83,8 @@ namespace GenericEventRunner.ForHandlers
         /// <param name="getTrackedEntities">A function to get the tracked entities</param>
         /// <param name="callBaseSaveChangesAsync">A function that is linked to the base SaveChangesAsync in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context, Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities, 
+        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context, 
+            Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities, 
             Func<Task<int>> callBaseSaveChangesAsync)
         {
             var status = new StatusGenericHandler<int>();
@@ -117,7 +118,7 @@ namespace GenericEventRunner.ForHandlers
         //------------------------------------------
         // private methods
 
-        private IStatusGeneric RunBeforeSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        private IStatusGeneric RunBeforeSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities)
         {
             var status = new StatusGenericHandler();
 
@@ -127,7 +128,7 @@ namespace GenericEventRunner.ForHandlers
             do
             {
                 var eventsToRun = new List<EntityAndEvent>();
-                foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
+                foreach (var entity in getTrackedEntities().Select(x => x.Entity))
                 {
                     eventsToRun.AddRange(entity.GetBeforeSaveEventsThenClear()
                         .Select(x => new EntityAndEvent(entity, x)));
@@ -161,7 +162,7 @@ namespace GenericEventRunner.ForHandlers
             return status;
         }
 
-        private void RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEvents>>> getTrackedEntities)
+        private void RunAfterSaveChangesEvents(Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities)
         {
             if (_config.NotUsingAfterSaveHandlers)
                 //Skip this stage if NotUsingAfterSaveHandlers is true

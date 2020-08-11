@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EntityClasses\EntityClasses.csproj" />
+    <ProjectReference Include="..\GenericEventRunner\GenericEventRunner.csproj" />
   </ItemGroup>
 
 </Project>

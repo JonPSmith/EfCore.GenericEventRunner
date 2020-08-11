@@ -3,14 +3,14 @@
 
 using DataLayer;
 using EntityClasses.DomainEvents;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForHandlers;
 
 namespace Infrastructure.AfterEventHandlers
 {
     public class OrderReadyToDispatchAfterHandler : IAfterSaveEventHandler<OrderReadyToDispatchEvent>
     {
-        public void Handle(EntityEvents callingEntity, OrderReadyToDispatchEvent domainEvent)
+        public void Handle(EntityEventsBase callingEntity, OrderReadyToDispatchEvent domainEvent)
         {
             //Send message to dispatch that order has been checked and is ready to go
         }

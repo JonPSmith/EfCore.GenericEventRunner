@@ -5,7 +5,7 @@ using System;
 using DataLayer;
 using EntityClasses;
 using EntityClasses.DomainEvents;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForHandlers;
 using StatusGeneric;
 
@@ -20,7 +20,7 @@ namespace Infrastructure.BeforeEventHandlers
             _context = context;
         }
 
-        public IStatusGeneric Handle(EntityEvents callingEntity, AllocateProductEvent domainEvent)
+        public IStatusGeneric Handle(EntityEventsBase callingEntity, AllocateProductEvent domainEvent)
         {
             var status = new StatusGenericHandler();
             var stock = _context.Find<ProductStock>(domainEvent.ProductName);

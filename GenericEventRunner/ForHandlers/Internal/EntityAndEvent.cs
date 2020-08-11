@@ -1,19 +1,19 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
     internal class EntityAndEvent
     {
-        public EntityAndEvent(EntityEvents callingEntity, IDomainEvent domainEvent)
+        public EntityAndEvent(EntityEventsBase callingEntity, IDomainEvent domainEvent)
         {
             CallingEntity = callingEntity;
             DomainEvent = domainEvent;
         }
 
-        public EntityEvents CallingEntity { get; }
+        public EntityEventsBase CallingEntity { get; }
         public IDomainEvent DomainEvent { get; }
     }
 }

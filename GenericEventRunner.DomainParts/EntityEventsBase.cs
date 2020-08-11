@@ -4,12 +4,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GenericEventRunner.ForEntities
+namespace GenericEventRunner.DomainParts
 {
     /// <summary>
     /// This is a class that the EF Core entity classes inherit to add events
     /// </summary>
-    public abstract class EntityEvents
+    public abstract class EntityEventsBase
     {
         //Events are NOT stored in the database - they are transitory events
         //Events are created within a single DBContext and are cleared every time SaveChanges/SaveChangesAsync is called

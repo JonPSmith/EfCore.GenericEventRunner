@@ -2,7 +2,7 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using GenericEventRunner.ForEntities;
+using GenericEventRunner.DomainParts;
 
 namespace GenericEventRunner.ForHandlers
 {
@@ -26,7 +26,7 @@ namespace GenericEventRunner.ForHandlers
         /// <param name="message"></param>
         /// <param name="callingEntity"></param>
         /// <param name="domainEvent"></param>
-        public GenericEventRunnerException(string message, EntityEvents callingEntity, IDomainEvent domainEvent)
+        public GenericEventRunnerException(string message, EntityEventsBase callingEntity, IDomainEvent domainEvent)
             : base(message)
         {
             Data.Add("CallingEntityType", callingEntity.GetType().FullName);
