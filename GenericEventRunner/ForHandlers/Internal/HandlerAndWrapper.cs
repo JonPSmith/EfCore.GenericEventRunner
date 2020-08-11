@@ -10,6 +10,7 @@ namespace GenericEventRunner.ForHandlers.Internal
         public HandlerAndWrapper(object eventHandler, Type eventType, bool beforeSave, bool isAsync)
         {
             EventHandler = eventHandler;
+            BeforeSave = beforeSave;
             IsAsync = isAsync;
 
             switch (beforeSave, isAsync)
@@ -33,6 +34,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 
         public Type WrapperType { get; }
 
+        public bool BeforeSave { get; }
         public bool IsAsync { get; }
     }
 }

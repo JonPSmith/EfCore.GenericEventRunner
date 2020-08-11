@@ -21,8 +21,9 @@ namespace GenericEventRunner.ForHandlers.Internal
             _logger = logger;
         }
 
-        public List<HandlerAndWrapper> GetHandlers(Type eventType, bool beforeSave, bool lookForAsyncHandlers)
+        public List<HandlerAndWrapper> GetHandlers(EntityAndEvent entityAndEvent, bool beforeSave, bool lookForAsyncHandlers)
         {
+            var eventType = entityAndEvent.DomainEvent.GetType();
             var asyncHandlers = new List<object>();
             if (lookForAsyncHandlers)
             {
@@ -38,8 +39,19 @@ namespace GenericEventRunner.ForHandlers.Internal
                     !string.Equals(x.GetType().Name + "Async", y.GetType().Name, StringComparison.InvariantCultureIgnoreCase)))
                     .ToList();
 
-            return asyncHandlers.Select(x => new HandlerAndWrapper(x, eventType, beforeSave, true))
+            var result = asyncHandlers.Select(x => new HandlerAndWrapper(x, eventType, beforeSave, true))
                 .Union(syncHandler.Select(x => new HandlerAndWrapper(x, eventType, beforeSave, false))).ToList();
+
+            if (!result.Any())
+            {
+                var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
+                _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.");
+                throw new GenericEventRunnerException(
+                    $"Could not find a {beforeAfter} event handler for the event {eventType.Name}.",
+                    entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+            }
+
+            return result;
         }
     }
 }

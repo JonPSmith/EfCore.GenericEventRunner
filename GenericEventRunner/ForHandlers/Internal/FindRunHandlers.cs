@@ -34,46 +34,84 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// <param name="entityAndEvent"></param>
         /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
-        /// <param name="useAsyncIfFound">True if called by an async </param>
-        /// <returns>Returns status with </returns>
-        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave, bool useAsyncIfFound)
+        /// <returns>Returns a combined status from all the event handlers that ran</returns>
+        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave)
         {
             var status = new StatusGenericHandler
             {
                 Message = "Successfully saved."
             };
-            var eventType = entityAndEvent.DomainEvent.GetType();
 
-            var handlersAndWrappers = _findHandlers.GetHandlers(eventType, beforeSave, useAsyncIfFound);
-            var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
-            if (!handlersAndWrappers.Any())
-            {
-                _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.");
-                throw new GenericEventRunnerException(
-                    $"Could not find a {beforeAfter} event handler for the event {eventType.Name}.",
-                    entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-            }
-
+            var handlersAndWrappers = _findHandlers.GetHandlers(entityAndEvent, beforeSave, false);
             foreach (var handlerWrapper in handlersAndWrappers)
             {
-
-                _logger.LogInformation($"{beforeAfter[0]}{loopCount}: About to run a {beforeAfter} event handler {handlerWrapper.EventHandler.GetType().FullName}.");
+                LogEventHandlerRun(loopCount, beforeSave, handlerWrapper);
                 if (beforeSave)
                 {
-                    var wrappedHandler = (BeforeSaveEventHandler) Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler);
-                    var handlerStatus = wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    var handlerStatus = ((BeforeSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
+                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                     if (handlerStatus != null)
                         status.CombineStatuses(handlerStatus);
                 }
                 else
                 {
-                    var wrappedHandler = (AfterSaveEventHandler) Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler);
-                    wrappedHandler.Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    ((AfterSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
+                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                 }
             }
 
             return status;
         }
-        
+
+        /// <summary>
+        /// This finds either sync or async handlers for the event and runs the handlers with the input event
+        /// </summary>
+        /// <param name="entityAndEvent"></param>
+        /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
+        /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
+        /// <returns>Returns a Task containing the combined status from all the event handlers that ran</returns>
+        public async Task<IStatusGeneric> RunHandlersForEventAsync(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave)
+        {
+            var status = new StatusGenericHandler
+            {
+                Message = "Successfully saved."
+            };
+
+            var handlersAndWrappers = _findHandlers.GetHandlers(entityAndEvent, beforeSave, true);
+            foreach (var handlerWrapper in handlersAndWrappers)
+            {
+                LogEventHandlerRun(loopCount, beforeSave, handlerWrapper);
+                if (beforeSave)
+                {
+                    var handlerStatus = handlerWrapper.IsAsync
+                        ? await((BeforeSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent)
+                        : ((BeforeSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
+                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    if (handlerStatus != null)
+                        status.CombineStatuses(handlerStatus);
+                }
+                else
+                {
+                    if (handlerWrapper.IsAsync)
+                        await ((AfterSaveEventHandlerAsync) Activator.CreateInstance(handlerWrapper.WrapperType,
+                                handlerWrapper.EventHandler))
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    else
+                        ((AfterSaveEventHandler) Activator.CreateInstance(handlerWrapper.WrapperType,
+                                handlerWrapper.EventHandler))
+                            .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                }
+            }
+
+            return status;
+        }
+
+        private void LogEventHandlerRun(int loopCount, bool beforeSave, HandlerAndWrapper handlerWrapper)
+        {
+            var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
+            _logger.LogInformation(
+                $"{beforeAfter[0]}{loopCount}: About to run a {beforeAfter} event handler {handlerWrapper.EventHandler.GetType().FullName}.");
+        }
     }
 }
