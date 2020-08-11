@@ -17,7 +17,7 @@ namespace GenericEventRunner.ForHandlers.Internal
         private readonly ILogger _logger;
         private readonly IGenericEventRunnerConfig _config;
 
-        private FindHandlers _findHandlers;
+        private readonly FindHandlers _findHandlers;
 
         public FindRunHandlers(IServiceProvider serviceProvider, ILogger logger, IGenericEventRunnerConfig config)
         {
@@ -29,63 +29,29 @@ namespace GenericEventRunner.ForHandlers.Internal
         }
 
         /// <summary>
-        /// This finds the handlers for the event and runs the handlers with the input event
-        /// </summary>
-        /// <param name="entityAndEvent"></param>
-        /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
-        /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
-        /// <returns>Returns a combined status from all the event handlers that ran</returns>
-        public IStatusGeneric RunHandlersForEvent(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave)
-        {
-            var status = new StatusGenericHandler
-            {
-                Message = "Successfully saved."
-            };
-
-            var handlersAndWrappers = _findHandlers.GetHandlers(entityAndEvent, beforeSave, false);
-            foreach (var handlerWrapper in handlersAndWrappers)
-            {
-                LogEventHandlerRun(loopCount, beforeSave, handlerWrapper);
-                if (beforeSave)
-                {
-                    var handlerStatus = ((BeforeSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-                    if (handlerStatus != null)
-                        status.CombineStatuses(handlerStatus);
-                }
-                else
-                {
-                    ((AfterSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
-                }
-            }
-
-            return status;
-        }
-
-        /// <summary>
         /// This finds either sync or async handlers for the event and runs the handlers with the input event
         /// </summary>
         /// <param name="entityAndEvent"></param>
         /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
         /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
+        /// <param name="allowAsync">true if async is allowed</param>
         /// <returns>Returns a Task containing the combined status from all the event handlers that ran</returns>
-        public async Task<IStatusGeneric> RunHandlersForEventAsync(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave)
+        public async ValueTask<IStatusGeneric> RunHandlersForEventAsync(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave, bool allowAsync)
         {
             var status = new StatusGenericHandler
             {
                 Message = "Successfully saved."
             };
 
-            var handlersAndWrappers = _findHandlers.GetHandlers(entityAndEvent, beforeSave, true);
+            var handlersAndWrappers = _findHandlers.GetHandlers(entityAndEvent, beforeSave, allowAsync);
             foreach (var handlerWrapper in handlersAndWrappers)
             {
                 LogEventHandlerRun(loopCount, beforeSave, handlerWrapper);
                 if (beforeSave)
                 {
                     var handlerStatus = handlerWrapper.IsAsync
-                        ? await((BeforeSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent)
+                        ? await ((BeforeSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent).ConfigureAwait(false)
                         : ((BeforeSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
                         .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                     if (handlerStatus != null)
@@ -96,7 +62,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                     if (handlerWrapper.IsAsync)
                         await ((AfterSaveEventHandlerAsync) Activator.CreateInstance(handlerWrapper.WrapperType,
                                 handlerWrapper.EventHandler))
-                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent).ConfigureAwait(false);
                     else
                         ((AfterSaveEventHandler) Activator.CreateInstance(handlerWrapper.WrapperType,
                                 handlerWrapper.EventHandler))

@@ -69,7 +69,7 @@ namespace GenericEventRunner.ForDbContext
                 throw new GenericEventRunnerException($"The {nameof(SaveChangesWithStatusAsync)} cannot be used unless the event runner is present");
 
             StatusFromLastSaveChanges = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(this, () => ChangeTracker.Entries<EntityEventsBase>(),
-                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken));
+                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken)).ConfigureAwait(false);
 
             return StatusFromLastSaveChanges;
         }
@@ -110,7 +110,7 @@ namespace GenericEventRunner.ForDbContext
                 return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
 
             StatusFromLastSaveChanges = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(this, () => ChangeTracker.Entries<EntityEventsBase>(),
-                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken));
+                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken)).ConfigureAwait(false);
 
             if (StatusFromLastSaveChanges.IsValid)
                 return StatusFromLastSaveChanges.Result;
