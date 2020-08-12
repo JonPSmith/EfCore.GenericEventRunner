@@ -5,8 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EfCore.GenericEventRunner.DomainParts" Version="2.0.0-preview003" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GenericEventRunner\GenericEventRunner.csproj" />
   </ItemGroup>
 
 </Project>
