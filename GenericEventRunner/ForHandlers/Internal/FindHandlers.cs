@@ -55,7 +55,7 @@ namespace GenericEventRunner.ForHandlers.Internal
             if (!result.Any())
             {
                 var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
-                var suffix = GetAsyncHandlers().Any() ? " Their was async handler available, but you didn't call SaveChangesAsync." : "";
+                var suffix = GetAsyncHandlers().Any() ? " Their was a suitable async event handler available, but you didn't call SaveChangesAsync." : "";
                 _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.{suffix}");
                 throw new GenericEventRunnerException(
                     $"Could not find a {beforeAfter} event handler for the event {eventType.Name}.{suffix}",

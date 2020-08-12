@@ -1,8 +1,11 @@
 ﻿// Copyright (c) 2019 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +50,37 @@ namespace Test.EfHelpers
             };
 
             services.RegisterGenericEventRunner(config ?? new GenericEventRunnerConfig(), assembliesToScan);
+            services.AddSingleton(options);
+            services.AddScoped<TContext>();
+            var serviceProvider = services.BuildServiceProvider();
+            var context = serviceProvider.GetRequiredService<TContext>();
+            return context;
+        }
+
+        /// <summary>
+        /// This registers the GenericEventRunner parts, plus the list of specific event handlers you have provided
+        /// It then creates the given TContext which should use the GenericEventRunner
+        /// </summary>
+        /// <typeparam name="TContext"></typeparam>
+        /// <param name="options"></param>
+        /// <param name="logs"></param>
+        /// <param name="eventHandlers"></param>
+        /// <returns></returns>
+        public static TContext CreateDbWithDiForHandlers<TContext>(this DbContextOptions<TContext> options,
+            List<LogOutput> logs, params Type[] eventHandlers) where TContext : DbContext 
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<ILogger<EventsRunner>>(
+                new Logger<EventsRunner>(new LoggerFactory(new[] {new MyLoggerProvider(logs)})));
+            services.AddSingleton<IGenericEventRunnerConfig>(new GenericEventRunnerConfig());
+            services.AddScoped<IEventsRunner, EventsRunner>();
+
+            foreach (var eventHandler in eventHandlers)
+            {
+                var typeInterface = eventHandler.GetInterfaces().Single();
+                services.AddTransient(typeInterface ,eventHandler);
+            }
+
             services.AddSingleton(options);
             services.AddScoped<TContext>();
             var serviceProvider = services.BuildServiceProvider();

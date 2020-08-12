@@ -44,12 +44,13 @@ namespace Test.EfHelpers
             return prodStocks;
         }
 
-        public static void SeedTwoTaxRates(this ExampleDbContext context)
+        public static List<TaxRate> SeedTwoTaxRates(this ExampleDbContext context)
         {
             var rateNow = new TaxRate(DateTime.Today, 4);
             var rate2Days = new TaxRate(DateTime.Today.AddDays(2), 9);
             context.AddRange(rateNow, rate2Days);
             context.SaveChanges();
+            return new List<TaxRate>{ rateNow, rate2Days};
         }
     }
 }
