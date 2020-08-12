@@ -51,10 +51,15 @@ namespace GenericEventRunner.ForSetup
             foreach (var assembly in assembliesToScan)
             {
                 eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandler<>), assembly));
+                eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandlerAsync<>), assembly));
                 var count = eventHandlersToRegister.Count;
                 if (!config.NotUsingAfterSaveHandlers)
+                {
                     eventHandlersToRegister
                         .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandler<>), assembly));
+                    eventHandlersToRegister
+                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandlerAsync<>), assembly));
+                }
                 
                 someAfterSaveHandlersFound |= (eventHandlersToRegister.Count > count);
             }
