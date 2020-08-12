@@ -35,6 +35,13 @@ namespace Test.UnitTests.InfrastructureTests
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<EventTestAfterExceptionHandler>),
                 typeof(AfterHandlerThrowsException),
                 ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+            //Async event handlers
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandlerAsync<EventDoNothing>),
+                typeof(BeforeHandlerDoNothingAsync),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandlerAsync<EventDoNothing>),
+                typeof(AfterHandlerDoNothingAsync),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
         }
 
         [Fact]
@@ -56,6 +63,9 @@ namespace Test.UnitTests.InfrastructureTests
                 ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<EventTestAfterExceptionHandler>),
                 typeof(AfterHandlerThrowsException),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeFalse();
+            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandlerAsync<EventDoNothing>),
+                typeof(AfterHandlerDoNothingAsync),
                 ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeFalse();
         }
     }
