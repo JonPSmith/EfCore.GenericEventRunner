@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.0.0-preview003</PackageVersion>
+    <PackageVersion>2.0.0</PackageVersion>
     <Version>2.0.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
@@ -22,7 +22,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      - First version. Defines class + interface for EfCore.GenericEventRunner when implementing a Clean Code architecture
+      - Defines class + interface for EfCore.GenericEventRunner when implementing a Clean Code architecture
     </PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerDomainNuGetIcon128.png</PackageIconUrl>
   </PropertyGroup>
