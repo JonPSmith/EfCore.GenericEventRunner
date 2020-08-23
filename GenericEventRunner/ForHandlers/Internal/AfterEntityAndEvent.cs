@@ -5,15 +5,15 @@ using GenericEventRunner.DomainParts;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
-    internal class EntityAndEvent
+    internal class AfterEntityAndEvent
     {
-        public EntityAndEvent(object callingEntity, IDomainEvent domainEvent)
+        public AfterEntityAndEvent(IEntityWithAfterSaveEvents callingEntity, IDomainEvent domainEvent)
         {
             CallingEntity = callingEntity;
             DomainEvent = domainEvent;
         }
 
-        public object CallingEntity { get; }
+        public IEntityWithAfterSaveEvents CallingEntity { get; }
         public IDomainEvent DomainEvent { get; }
     }
 }

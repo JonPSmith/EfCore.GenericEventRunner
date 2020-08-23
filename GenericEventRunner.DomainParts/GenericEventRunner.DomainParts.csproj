@@ -6,10 +6,10 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.0.0</PackageVersion>
-    <Version>2.0.0</Version>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <PackageVersion>2.1.0-preview002</PackageVersion>
+    <Version>2.1.0</Version>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <PackageId>EfCore.GenericEventRunner.DomainParts</PackageId>
     <Authors>Jon P Smith</Authors>
     <Company>Selective Analytics</Company>

@@ -9,7 +9,7 @@ namespace Test.EventsAndHandlers
 {
     public class AfterHandlerThrowsException : IAfterSaveEventHandler<EventTestAfterExceptionHandler>
     {
-        public void Handle(EntityEventsBase callingEntity, EventTestAfterExceptionHandler domainEvent)
+        public void Handle(object callingEntity, EventTestAfterExceptionHandler domainEvent)
         {
             throw new ApplicationException(nameof(AfterHandlerThrowsException));
         }

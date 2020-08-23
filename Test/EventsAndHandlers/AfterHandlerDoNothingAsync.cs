@@ -10,7 +10,7 @@ namespace Test.EventsAndHandlers
     public class AfterHandlerDoNothingAsync : IAfterSaveEventHandlerAsync<EventDoNothing>
     {
 
-        public Task HandleAsync(EntityEventsBase callingEntity, EventDoNothing domainEvent)
+        public Task HandleAsync(object callingEntity, EventDoNothing domainEvent)
         {
             return Task.CompletedTask;
         }

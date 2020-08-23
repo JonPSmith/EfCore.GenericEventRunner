@@ -10,7 +10,7 @@ namespace Infrastructure.AfterEventHandlers
 {
     public class OrderReadyToDispatchAfterHandler : IAfterSaveEventHandler<OrderReadyToDispatchEvent>
     {
-        public void Handle(EntityEventsBase callingEntity, OrderReadyToDispatchEvent domainEvent)
+        public void Handle(object callingEntity, OrderReadyToDispatchEvent domainEvent)
         {
             //Send message to dispatch that order has been checked and is ready to go
         }

@@ -53,7 +53,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                         ? await ((BeforeSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
                             .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent).ConfigureAwait(false)
                         : ((BeforeSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                            .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                     if (handlerStatus != null)
                         status.CombineStatuses(handlerStatus);
                 }

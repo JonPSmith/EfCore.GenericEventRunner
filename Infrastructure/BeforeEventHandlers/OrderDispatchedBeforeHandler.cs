@@ -23,7 +23,7 @@ namespace Infrastructure.BeforeEventHandlers
             _rateFinder = new TaxRateLookup(context);
         }
 
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, OrderReadyToDispatchEvent domainEvent)
+        public IStatusGeneric Handle(object callingEntity, OrderReadyToDispatchEvent domainEvent)
         {
             var status = new StatusGenericHandler();
             //Update the rate as the date may have changed

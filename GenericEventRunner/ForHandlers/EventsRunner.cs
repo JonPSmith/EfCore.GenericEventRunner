@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForDbContext;
@@ -44,7 +45,7 @@ namespace GenericEventRunner.ForHandlers
         /// <param name="getTrackedEntities">A function to get the tracked entities</param>
         /// <param name="callBaseSaveChanges">A function that is linked to the base SaveChanges in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities,  
+        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<IEnumerable<EntityEntry>> getTrackedEntities,  
             Func<int> callBaseSaveChanges)
         {
             var status = new StatusGenericHandler<int>();
@@ -91,7 +92,7 @@ namespace GenericEventRunner.ForHandlers
         /// <param name="callBaseSaveChangesAsync">A function that is linked to the base SaveChangesAsync in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
         public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context, 
-            Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities, 
+            Func<IEnumerable<EntityEntry>> getTrackedEntities, 
             Func<Task<int>> callBaseSaveChangesAsync)
         {
             var status = new StatusGenericHandler<int>();
@@ -126,7 +127,7 @@ namespace GenericEventRunner.ForHandlers
         // private methods
 
         private async ValueTask<IStatusGeneric> RunBeforeSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities, bool allowAsync)
+            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
         {
             var status = new StatusGenericHandler();
 
@@ -136,7 +137,7 @@ namespace GenericEventRunner.ForHandlers
             do
             {
                 var eventsToRun = new List<EntityAndEvent>();
-                foreach (var entity in getTrackedEntities().Select(x => x.Entity))
+                foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithBeforeSaveEvents>())
                 {
                     eventsToRun.AddRange(entity.GetBeforeSaveEventsThenClear()
                         .Select(x => new EntityAndEvent(entity, x)));
@@ -160,13 +161,15 @@ namespace GenericEventRunner.ForHandlers
             } while (shouldRunAgain && (status.IsValid || !_config.StopOnFirstBeforeHandlerThatHasAnError));
 
             if (!status.IsValid)
+            {
                 //If errors then clear any extra before/after events.
                 //We need to do this to ensure another call to SaveChanges doesn't get the old events
-                getTrackedEntities.Invoke().ToList().ForEach(x =>
-                {
-                    x.Entity.GetBeforeSaveEventsThenClear();
-                    x.Entity.GetAfterSaveEventsThenClear();
-                });
+                getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithBeforeSaveEvents>()
+                    .Select(x => x.GetBeforeSaveEventsThenClear());
+                getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithAfterSaveEvents>()
+                    .Select(x => x.GetAfterSaveEventsThenClear());
+                
+            }
 
             return status;
         }
@@ -175,14 +178,14 @@ namespace GenericEventRunner.ForHandlers
         //NOTE: This had problems throwing an exception (don't know why - RunBeforeSaveChangesEventsAsync work!?).
         //Having it return an exception fixed it
         private async ValueTask<Exception> RunAfterSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities, bool allowAsync)
+            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
         {
             if (_config.NotUsingAfterSaveHandlers)
                 //Skip this stage if NotUsingAfterSaveHandlers is true
                 return null;
 
             var eventsToRun = new List<EntityAndEvent>();
-            foreach (var entity in getTrackedEntities.Invoke().Select(x => x.Entity))
+            foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithAfterSaveEvents>())
             {
                 eventsToRun.AddRange(entity.GetAfterSaveEventsThenClear()
                     .Select(x => new EntityAndEvent(entity, x)));

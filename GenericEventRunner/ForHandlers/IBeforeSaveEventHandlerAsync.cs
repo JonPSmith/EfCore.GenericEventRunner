@@ -19,6 +19,6 @@ namespace GenericEventRunner.ForHandlers
         /// <param name="callingEntity"></param>
         /// <param name="domainEvent"></param>
         /// <returns>This can be null if you don't want to return a status, otherwise it should be a IStatusGeneric type</returns>
-        Task<IStatusGeneric> HandleAsync(EntityEventsBase callingEntity, T domainEvent);
+        Task<IStatusGeneric> HandleAsync(object callingEntity, T domainEvent);
     }
 }

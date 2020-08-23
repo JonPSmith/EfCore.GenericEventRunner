@@ -10,7 +10,7 @@ namespace Infrastructure.BeforeEventHandlers
 {
     public class TaxRateChangedHandler : IBeforeSaveEventHandler<TaxRateChangedEvent>
     {
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, TaxRateChangedEvent domainEvent)
+        public IStatusGeneric Handle(object callingEntity, TaxRateChangedEvent domainEvent)
         {
             //do something with the new tax rate
 

@@ -10,7 +10,7 @@ namespace Test.EventsAndHandlers
 {
     public class BeforeHandlerDoNothingAsync : IBeforeSaveEventHandlerAsync<EventDoNothing>
     {
-        public Task<IStatusGeneric> HandleAsync(EntityEventsBase callingEntity, EventDoNothing domainEvent)
+        public Task<IStatusGeneric> HandleAsync(object callingEntity, EventDoNothing domainEvent)
         {
             return Task.FromResult<IStatusGeneric>(null);
         }

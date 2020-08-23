@@ -10,7 +10,7 @@ namespace Test.EventsAndHandlers
 {
     public class BeforeHandlerThrowsException : IBeforeSaveEventHandler<EventTestBeforeExceptionHandler>
     {
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, EventTestBeforeExceptionHandler domainEvent)
+        public IStatusGeneric Handle(object callingEntity, EventTestBeforeExceptionHandler domainEvent)
         {
             throw new ApplicationException(nameof(BeforeHandlerThrowsException));
         }

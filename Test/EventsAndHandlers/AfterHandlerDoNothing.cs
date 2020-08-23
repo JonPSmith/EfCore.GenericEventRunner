@@ -9,7 +9,7 @@ namespace Test.EventsAndHandlers
 {
     public class AfterHandlerDoNothing : IAfterSaveEventHandler<EventDoNothing>
     {
-        public void Handle(EntityEventsBase callingEntity, EventDoNothing domainEvent)
+        public void Handle(object callingEntity, EventDoNothing domainEvent)
         {
         }
     }

@@ -9,7 +9,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 {
     internal abstract class BeforeSaveEventHandlerAsync
     {
-        public abstract Task<IStatusGeneric> HandleAsync(EntityEventsBase callingEntity, IDomainEvent domainEvent);
+        public abstract Task<IStatusGeneric> HandleAsync(object callingEntity, IDomainEvent domainEvent);
     }
 
     internal class BeforeSaveHandlerAsync<T> : BeforeSaveEventHandlerAsync
@@ -22,7 +22,7 @@ namespace GenericEventRunner.ForHandlers.Internal
             _handler = handler;
         }
 
-        public override Task<IStatusGeneric> HandleAsync(EntityEventsBase callingEntity, IDomainEvent domainEvent)
+        public override Task<IStatusGeneric> HandleAsync(object callingEntity, IDomainEvent domainEvent)
         {
             return _handler.HandleAsync(callingEntity, (T)domainEvent);
         }

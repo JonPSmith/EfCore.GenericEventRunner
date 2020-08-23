@@ -16,6 +16,6 @@ namespace GenericEventRunner.ForHandlers
         /// </summary>
         /// <param name="callingEntity"></param>
         /// <param name="domainEvent"></param>
-        void Handle(EntityEventsBase callingEntity, T domainEvent);
+        void Handle(object callingEntity, T domainEvent);
     }
 }

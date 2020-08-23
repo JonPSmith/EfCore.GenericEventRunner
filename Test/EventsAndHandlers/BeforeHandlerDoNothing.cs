@@ -9,7 +9,7 @@ namespace Test.EventsAndHandlers
 {
     public class BeforeHandlerDoNothing : IBeforeSaveEventHandler<EventDoNothing>
     {
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, EventDoNothing domainEvent)
+        public IStatusGeneric Handle(object callingEntity, EventDoNothing domainEvent)
         {
             return null;
         }

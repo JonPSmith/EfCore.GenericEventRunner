@@ -20,22 +20,22 @@ namespace GenericEventRunner.ForDbContext
         /// This Handles the running of the BeforeSave Event Handlers
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="getTrackedEntities">Func that gets all the tracked entities that inherited the EntityEventsBase class</param>
+        /// <param name="getTrackedEntities">Func that gets all the tracked entities</param>
         /// <param name="callBaseSaveChanges">This calls the base SaveChanges.</param>
         /// <returns></returns>
         IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context,
-            Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities,
+            Func<IEnumerable<EntityEntry>> getTrackedEntities,
             Func<int> callBaseSaveChanges);
 
         /// <summary>
         /// This Handles the running of the BeforeSave Event Handlers
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="getTrackedEntities">Func that gets all the tracked entities that inherited the EntityEventsBase class</param>
+        /// <param name="getTrackedEntities">Func that gets all the tracked entities</param>
         /// <param name="callBaseSaveChangesAsync">This calls the base SaveChangesAsync.</param>
         /// <returns></returns>
         Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context,
-            Func<IEnumerable<EntityEntry<EntityEventsBase>>> getTrackedEntities,
+            Func<IEnumerable<EntityEntry>> getTrackedEntities,
             Func<Task<int>> callBaseSaveChangesAsync);
     }
 }

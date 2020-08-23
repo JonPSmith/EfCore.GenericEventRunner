@@ -12,7 +12,7 @@ namespace Test.EventsAndHandlers
     [EventHandlerConfig(ServiceLifetime.Scoped)]
     public class BeforeHandlerThrowsExceptionWithAttribute : IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>
     {
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, EventTestExceptionHandlerWithAttribute domainEvent)
+        public IStatusGeneric Handle(object callingEntity, EventTestExceptionHandlerWithAttribute domainEvent)
         {
             throw new ApplicationException(nameof(BeforeHandlerThrowsExceptionWithAttribute));
         }

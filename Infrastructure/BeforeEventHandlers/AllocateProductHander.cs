@@ -20,7 +20,7 @@ namespace Infrastructure.BeforeEventHandlers
             _context = context;
         }
 
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, AllocateProductEvent domainEvent)
+        public IStatusGeneric Handle(object callingEntity, AllocateProductEvent domainEvent)
         {
             var status = new StatusGenericHandler();
             var stock = _context.Find<ProductStock>(domainEvent.ProductName);

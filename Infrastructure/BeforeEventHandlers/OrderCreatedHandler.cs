@@ -21,7 +21,7 @@ namespace Infrastructure.BeforeEventHandlers
             _rateFinder = new TaxRateLookup(context);
         }
 
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, OrderCreatedEvent domainEvent)
+        public IStatusGeneric Handle(object callingEntity, OrderCreatedEvent domainEvent)
         {
             var tax = _rateFinder.GetTaxRateInEffect(domainEvent.ExpectedDispatchDate);
             domainEvent.SetTaxRatePercent(tax);

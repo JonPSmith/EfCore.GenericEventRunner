@@ -9,9 +9,9 @@ namespace Test.EventsAndHandlers
 {
     public class BeforeHandlerCircularEvent : IBeforeSaveEventHandler<EventCircularEvent>
     {
-        public IStatusGeneric Handle(EntityEventsBase callingEntity, EventCircularEvent domainEvent)
+        public IStatusGeneric Handle(object callingEntity, EventCircularEvent domainEvent)
         {
-            callingEntity.AddEvent(domainEvent);
+            ((EntityEventsBase)callingEntity).AddEvent(domainEvent);
             return null;
         }
     }

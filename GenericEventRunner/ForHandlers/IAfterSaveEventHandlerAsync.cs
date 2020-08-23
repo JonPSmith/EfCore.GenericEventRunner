@@ -17,6 +17,6 @@ namespace GenericEventRunner.ForHandlers
         /// </summary>
         /// <param name="callingEntity"></param>
         /// <param name="domainEvent"></param>
-        Task HandleAsync(EntityEventsBase callingEntity, T domainEvent);
+        Task HandleAsync(object callingEntity, T domainEvent);
     }
 }
