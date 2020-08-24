@@ -165,9 +165,9 @@ namespace GenericEventRunner.ForHandlers
                 //If errors then clear any extra before/after events.
                 //We need to do this to ensure another call to SaveChanges doesn't get the old events
                 getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithBeforeSaveEvents>()
-                    .Select(x => x.GetBeforeSaveEventsThenClear());
+                    .ToList().ForEach(x => x.GetBeforeSaveEventsThenClear());
                 getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithAfterSaveEvents>()
-                    .Select(x => x.GetAfterSaveEventsThenClear());
+                    .ToList().ForEach(x => x.GetAfterSaveEventsThenClear());
                 
             }
 
