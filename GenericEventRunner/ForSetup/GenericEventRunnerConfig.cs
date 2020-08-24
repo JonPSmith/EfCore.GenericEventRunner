@@ -2,6 +2,8 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
+
 using Microsoft.EntityFrameworkCore;
 using StatusGeneric;
 
@@ -14,11 +16,24 @@ namespace GenericEventRunner.ForSetup
     public class GenericEventRunnerConfig : IGenericEventRunnerConfig
     {
         /// <summary>
+        /// This holds the list of actions to be run after DetectChanges is called, but before SaveChanges is called
+        /// NOTE: The BeforeSaveEvents will be run before these actions
+        /// </summary>
+        public List<(Type dbContext, Action<object> action)> ActionsToRunAfterDetectChanges { get; private set; }
+            = new List<(Type dbContext, Action<object> action)>();
+
+        /// <summary>
         /// This limits the number of times it will look for new events from the BeforeSave events.
         /// This stops circular sets of events
         /// The event runner will throw an exception if the BeforeSave loop goes round move than this number.
         /// </summary>
         public int MaxTimesToLookForBeforeEvents { get; set; } = 6;
+
+        /// <summary>
+        /// If this is set to true, then the DuringSave event handlers aren't used
+        /// NOTE: This is set to true if the RegisterGenericEventRunner doesn't find any DuringSave event handlers
+        /// </summary>
+        public bool NotUsingDuringSaveHandlers { get; set; }
 
         /// <summary>
         /// If this is set to true, then the AfterSave event handlers aren't used
@@ -34,6 +49,20 @@ namespace GenericEventRunner.ForSetup
         /// NOTE: Because this is very event-specific you can override this on a per-handler basis via the EventHandlerConfig Attribute
         /// </summary>
         public bool StopOnFirstBeforeHandlerThatHasAnError { get; set; } = true;
+
+        /// <summary>
+        /// Add a method which should be executed after ChangeTracker.DetectChanges() has been run for the given DbContext
+        /// This is useful to add code that uses the State of entities to  
+        /// NOTES:
+        /// - DetectChanges won't be called again, so you must ensure that an changes must be manually applied. 
+        /// - The BeforeSaveEvents will be run before this action is called
+        /// </summary>
+        /// <typeparam name="TContext">Must be a DbContext that uses the GenericEventRunner</typeparam>
+        /// <param name="runAfterDetectChanges"></param>
+        public void AddActionToRunAfterDetectChanges<TContext>(Action<TContext> runAfterDetectChanges)  where TContext : DbContext
+        {
+            ActionsToRunAfterDetectChanges.Add(((Type dbContext, Action<object> action))(dbContext: typeof(TContext),  action: runAfterDetectChanges));
+        }
 
         /// <summary>
         /// When SaveChangesWithValidation is called if there is an exception then this method is called (if present)

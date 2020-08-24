@@ -47,12 +47,24 @@ namespace GenericEventRunner.ForSetup
                 assembliesToScan = new Assembly[]{ Assembly.GetCallingAssembly()};
 
             var eventHandlersToRegister = new List<(Type classType, Type interfaceType)>();
+            var someDuringSaveHandlersFound = false;
             var someAfterSaveHandlersFound = false;
             foreach (var assembly in assembliesToScan)
             {
                 eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandler<>), assembly));
                 eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandlerAsync<>), assembly));
+
                 var count = eventHandlersToRegister.Count;
+                if (!config.NotUsingDuringSaveHandlers)
+                {
+                    eventHandlersToRegister
+                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IDuringSaveEventHandler<>), assembly));
+                    eventHandlersToRegister
+                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IDuringSaveEventHandlerAsync<>), assembly));
+                }
+                someDuringSaveHandlersFound |= (eventHandlersToRegister.Count > count);
+
+                count = eventHandlersToRegister.Count;
                 if (!config.NotUsingAfterSaveHandlers)
                 {
                     eventHandlersToRegister
@@ -60,12 +72,14 @@ namespace GenericEventRunner.ForSetup
                     eventHandlersToRegister
                         .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandlerAsync<>), assembly));
                 }
-                
                 someAfterSaveHandlersFound |= (eventHandlersToRegister.Count > count);
             }
 
+            if (!someDuringSaveHandlersFound)
+                config.NotUsingDuringSaveHandlers = true;
             if (!someAfterSaveHandlersFound)
                 config.NotUsingAfterSaveHandlers = true;
+
 
             foreach (var (implementationType, interfaceType) in eventHandlersToRegister)
             {
@@ -79,6 +93,9 @@ namespace GenericEventRunner.ForSetup
                     services.AddSingleton(interfaceType, implementationType);
             }
 
+            if (services.Contains(new ServiceDescriptor(typeof(IEventsRunner), typeof(EventsRunner), ServiceLifetime.Scoped),
+                new ServiceDescriptorCompare()))
+                throw new InvalidOperationException("You can only call this method once to register the GenericEventRunner.");
             services.AddSingleton<IGenericEventRunnerConfig>(config);
             services.AddScoped<IEventsRunner, EventsRunner>();
         }
