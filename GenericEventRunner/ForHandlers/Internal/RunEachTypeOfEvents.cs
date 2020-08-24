@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForSetup;
@@ -13,6 +14,8 @@ using StatusGeneric;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
+    internal enum BeforeDuringOrAfter { BeforeSave, DuringButBeforeSaveChanges, DuringSave, AfterSave }
+
     internal class RunEachTypeOfEvents
     {
         private readonly FindRunHandlers _findRunHandlers;
@@ -45,8 +48,18 @@ namespace GenericEventRunner.ForHandlers.Internal
                 foreach (var entityAndEvent in eventsToRun)
                 {
                     shouldRunAgain = true;
-                    status.CombineStatuses(await _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, loopCount, true, allowAsync)
-                        .ConfigureAwait(false));
+                    if (allowAsync)
+                        status.CombineStatuses(await _findRunHandlers.RunHandlersForEventAsync(
+                                entityAndEvent, loopCount, BeforeDuringOrAfter.BeforeSave, allowAsync)
+                            .ConfigureAwait(false));
+                    else
+                    {
+                        var findRunStatus =
+                            _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, loopCount, BeforeDuringOrAfter.BeforeSave, allowAsync);
+                        if (!findRunStatus.IsCompleted)
+                            throw new InvalidOperationException("Can only run sync tasks");
+                        status.CombineStatuses(findRunStatus.Result);
+                    }
                     if (!status.IsValid && _config.StopOnFirstBeforeHandlerThatHasAnError)
                         break;
                 }
@@ -73,9 +86,42 @@ namespace GenericEventRunner.ForHandlers.Internal
         }
 
         public async ValueTask<IStatusGeneric> RunDuringSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool beforeSavChanges, bool allowAsync)
+            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
         {
-            return new StatusGenericHandler();
+            var status = new StatusGenericHandler();
+
+            var allDuringEvents = new List<EntityAndEvent>();
+            foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithDuringSaveEvents>())
+            {
+                allDuringEvents.AddRange(entity.GetDuringSaveEvents()
+                    .Select(x => new EntityAndEvent(entity, x)));
+            }
+
+            //Find the events marked to run before SaveChanges
+            var duringBeforeEvents = allDuringEvents
+                .Where(x => x.DomainEvent.GetType()
+                                .GetCustomAttribute<DuringSaveStageAttribute>()?.WhenToExecute ==
+                            DuringSaveStages.BeforeSaveChanges)
+                .ToList();
+
+            foreach (EntityAndEvent entityAndEvent in duringBeforeEvents)
+            {
+                if (allowAsync)
+                    status.CombineStatuses(await _findRunHandlers.RunHandlersForEventAsync(
+                            entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, allowAsync)
+                        .ConfigureAwait(false));
+                else
+                {
+                    var findRunStatus =
+                        _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, allowAsync);
+                    if (!findRunStatus.IsCompleted)
+                        throw new InvalidOperationException("Can only run sync tasks");
+                    status.CombineStatuses(findRunStatus.Result);
+                }
+            }
+
+
+            return status;
         }
 
 
@@ -84,6 +130,8 @@ namespace GenericEventRunner.ForHandlers.Internal
         public async ValueTask<Exception> RunAfterSaveChangesEventsAsync(
             Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
         {
+            var status = new StatusGenericHandler();
+
             if (_config.NotUsingAfterSaveHandlers)
                 //Skip this stage if NotUsingAfterSaveHandlers is true
                 return null;
@@ -97,7 +145,17 @@ namespace GenericEventRunner.ForHandlers.Internal
 
             foreach (var entityAndEvent in eventsToRun)
             {
-                await _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, false, allowAsync).ConfigureAwait(false);
+                if (allowAsync)
+                    status.CombineStatuses(await _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, BeforeDuringOrAfter.AfterSave, allowAsync)
+                        .ConfigureAwait(false));
+                else
+                {
+                    var findRunStatus =
+                        _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, BeforeDuringOrAfter.AfterSave, allowAsync);
+                    if (!findRunStatus.IsCompleted)
+                        throw new InvalidOperationException("Can only run sync tasks");
+                    status.CombineStatuses(findRunStatus.Result);
+                }
             }
 
             return null;

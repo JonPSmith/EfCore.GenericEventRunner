@@ -51,7 +51,8 @@ namespace GenericEventRunner.ForHandlers
                 var localStatus = new StatusGenericHandler<int>();
                 using (var transaction = context.Database.BeginTransaction())
                 {
-                    var duringPreValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(getTrackedEntities, true, false);
+                    var duringPreValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(
+                        getTrackedEntities, false);
                     if (!duringPreValueTask.IsCompleted)
                         throw new InvalidOperationException("Can only run sync tasks");
                     localStatus.CombineStatuses(duringPreValueTask.Result);
@@ -62,7 +63,8 @@ namespace GenericEventRunner.ForHandlers
 
                     localStatus.SetResult(transactionSaveChanges.Result);
 
-                    var duringPostValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(getTrackedEntities, false, false);
+                    var duringPostValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(
+                        getTrackedEntities, false);
                     if (!duringPostValueTask.IsCompleted)
                         throw new InvalidOperationException("Can only run sync tasks");
                     if (localStatus.CombineStatuses(duringPostValueTask.Result).HasErrors)
@@ -77,8 +79,6 @@ namespace GenericEventRunner.ForHandlers
 
             var status = new StatusGenericHandler<int>();
 
-
-
             var beforeValueTask = _eachEventRunner.RunBeforeSaveChangesEventsAsync(getTrackedEntities, false);
             if (!beforeValueTask.IsCompleted)
                 throw new InvalidOperationException("Can only run sync tasks");
@@ -92,7 +92,7 @@ namespace GenericEventRunner.ForHandlers
             RunAnyAfterDetectChangesActions(context);
 
             //Call SaveChanges with catch for exception handler
-            IStatusGeneric<int> callSaveChangesStatus = null;
+            IStatusGeneric<int> callSaveChangesStatus;
             if (_config.NotUsingDuringSaveHandlers || context.Database.CurrentTransaction != null)
             {
                 //Either we doing need a transaction, or someone else is managing the transaction so we just call SaveChanges

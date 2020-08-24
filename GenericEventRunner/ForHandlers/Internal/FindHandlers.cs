@@ -22,15 +22,14 @@ namespace GenericEventRunner.ForHandlers.Internal
             _logger = logger;
         }
 
-        public List<HandlerAndWrapper> GetHandlers(EntityAndEvent entityAndEvent, bool beforeSave, bool lookForAsyncHandlers)
+        public List<HandlerAndWrapper> GetHandlers(EntityAndEvent entityAndEvent, BeforeDuringOrAfter beforeDuringOrAfter, bool lookForAsyncHandlers)
         {
             var eventType = entityAndEvent.DomainEvent.GetType();
             var asyncHandlers = new List<object>();
 
             List<object> GetAsyncHandlers()
             {
-                var asyncHandlerInterface =
-                    (beforeSave ? typeof(IBeforeSaveEventHandlerAsync<>) : typeof(IAfterSaveEventHandlerAsync<>))
+                var asyncHandlerInterface = GetEventHandlerGenericType(beforeDuringOrAfter, true)
                     .MakeGenericType(eventType);
                 asyncHandlers = _serviceProvider.GetServices(asyncHandlerInterface).ToList();
                 return asyncHandlers;
@@ -40,7 +39,7 @@ namespace GenericEventRunner.ForHandlers.Internal
             {
                 asyncHandlers = GetAsyncHandlers();
             }
-            var syncHandlerInterface = (beforeSave ? typeof(IBeforeSaveEventHandler<>) : typeof(IAfterSaveEventHandler<>))
+            var syncHandlerInterface = GetEventHandlerGenericType(beforeDuringOrAfter, false)
                 .MakeGenericType(eventType);
 
             var syncHandler = _serviceProvider.GetServices(syncHandlerInterface)
@@ -49,20 +48,42 @@ namespace GenericEventRunner.ForHandlers.Internal
                     !string.Equals(x.GetType().Name + "Async", y.GetType().Name, StringComparison.InvariantCultureIgnoreCase)))
                 .ToList();
 
-            var result = asyncHandlers.Select(x => new HandlerAndWrapper(x, eventType, beforeSave, true))
-                .Union(syncHandler.Select(x => new HandlerAndWrapper(x, eventType, beforeSave, false))).ToList();
+            var result = asyncHandlers.Select(x => new HandlerAndWrapper(x, eventType, beforeDuringOrAfter, true))
+                .Union(syncHandler.Select(x => new HandlerAndWrapper(x, eventType, beforeDuringOrAfter, false))).ToList();
 
             if (!result.Any())
             {
-                var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
                 var suffix = GetAsyncHandlers().Any() ? " Their was a suitable async event handler available, but you didn't call SaveChangesAsync." : "";
-                _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeAfter} event handler.{suffix}");
+                _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeDuringOrAfter} event handler.{suffix}");
                 throw new GenericEventRunnerException(
-                    $"Could not find a {beforeAfter} event handler for the event {eventType.Name}.{suffix}",
+                    $"Could not find a {beforeDuringOrAfter} event handler for the event {eventType.Name}.{suffix}",
                     entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
             }
 
             return result;
+        }
+
+        private Type GetEventHandlerGenericType(BeforeDuringOrAfter beforeDuringOrAfter, bool lookForAsyncHandlers)
+        {
+            switch (beforeDuringOrAfter, lookForAsyncHandlers)
+            {
+                case (BeforeDuringOrAfter.BeforeSave, false):
+                    return typeof(IBeforeSaveEventHandler<>);
+                case (BeforeDuringOrAfter.BeforeSave, true):
+                    return typeof(IBeforeSaveEventHandlerAsync<>);
+                case (BeforeDuringOrAfter.DuringButBeforeSaveChanges, false):
+                case (BeforeDuringOrAfter.DuringSave, false):
+                    return typeof(IDuringSaveEventHandler<>);
+                case (BeforeDuringOrAfter.DuringButBeforeSaveChanges, true):
+                case (BeforeDuringOrAfter.DuringSave, true):
+                    return typeof(IDuringSaveEventHandlerAsync<>);
+                case (BeforeDuringOrAfter.AfterSave, false):
+                    return typeof(IAfterSaveEventHandler<>);
+                case (BeforeDuringOrAfter.AfterSave, true):
+                    return typeof(IAfterSaveEventHandlerAsync<>);
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 }

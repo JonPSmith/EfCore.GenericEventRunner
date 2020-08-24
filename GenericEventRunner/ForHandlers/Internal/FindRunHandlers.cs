@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using GenericEventRunner.ForSetup;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StatusGeneric;
 
@@ -18,6 +17,11 @@ namespace GenericEventRunner.ForHandlers.Internal
         private readonly IGenericEventRunnerConfig _config;
 
         private readonly FindHandlers _findHandlers;
+
+        //This is used by During events to handle retry of a transaction
+        private readonly Guid _uniqueValue = Guid.NewGuid();
+
+
 
         public FindRunHandlers(IServiceProvider serviceProvider, ILogger logger, IGenericEventRunnerConfig config)
         {
@@ -33,21 +37,22 @@ namespace GenericEventRunner.ForHandlers.Internal
         /// </summary>
         /// <param name="entityAndEvent"></param>
         /// <param name="loopCount">This gives the loop number for the RunBefore/AfterSaveChangesEvents</param>
-        /// <param name="beforeSave">true for BeforeSave, and false for AfterSave</param>
+        /// <param name="beforeDuringOrAfter">tells you what type of event to find/Run</param>
         /// <param name="allowAsync">true if async is allowed</param>
         /// <returns>Returns a Task containing the combined status from all the event handlers that ran</returns>
-        public async ValueTask<IStatusGeneric> RunHandlersForEventAsync(EntityAndEvent entityAndEvent, int loopCount, bool beforeSave, bool allowAsync)
+        public async ValueTask<IStatusGeneric> RunHandlersForEventAsync(EntityAndEvent entityAndEvent, int loopCount, 
+            BeforeDuringOrAfter beforeDuringOrAfter, bool allowAsync)
         {
             var status = new StatusGenericHandler
             {
                 Message = "Successfully saved."
             };
 
-            var handlersAndWrappers = _findHandlers.GetHandlers(entityAndEvent, beforeSave, allowAsync);
+            var handlersAndWrappers = _findHandlers.GetHandlers(entityAndEvent, beforeDuringOrAfter, allowAsync);
             foreach (var handlerWrapper in handlersAndWrappers)
             {
-                LogEventHandlerRun(loopCount, beforeSave, handlerWrapper);
-                if (beforeSave)
+                LogEventHandlerRun(loopCount, beforeDuringOrAfter, handlerWrapper);
+                if (beforeDuringOrAfter == BeforeDuringOrAfter.BeforeSave)
                 {
                     var handlerStatus = handlerWrapper.IsAsync
                         ? await ((BeforeSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
@@ -57,7 +62,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                     if (handlerStatus != null)
                         status.CombineStatuses(handlerStatus);
                 }
-                else
+                else if (beforeDuringOrAfter == BeforeDuringOrAfter.AfterSave)
                 {
                     if (handlerWrapper.IsAsync)
                         await ((AfterSaveEventHandlerAsync) Activator.CreateInstance(handlerWrapper.WrapperType,
@@ -68,16 +73,28 @@ namespace GenericEventRunner.ForHandlers.Internal
                                 handlerWrapper.EventHandler))
                             .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
                 }
+                else
+                {
+                    //Its either of the during events
+
+                    var handlerStatus = handlerWrapper.IsAsync
+                        ? await ((DuringSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent, _uniqueValue)
+                            .ConfigureAwait(false)
+                        : ((DuringSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
+                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent, _uniqueValue);
+                    if (handlerStatus != null)
+                        status.CombineStatuses(handlerStatus);
+                }
             }
 
             return status;
         }
 
-        private void LogEventHandlerRun(int loopCount, bool beforeSave, HandlerAndWrapper handlerWrapper)
+        private void LogEventHandlerRun(int loopCount, BeforeDuringOrAfter beforeDuringOrAfter, HandlerAndWrapper handlerWrapper)
         {
-            var beforeAfter = beforeSave ? "BeforeSave" : "AfterSave";
             _logger.LogInformation(
-                $"{beforeAfter[0]}{loopCount}: About to run a {beforeAfter} event handler {handlerWrapper.EventHandler.GetType().FullName}.");
+                $"{beforeDuringOrAfter.ToString()[0]}{loopCount}: About to run a {beforeDuringOrAfter} event handler {handlerWrapper.EventHandler.GetType().FullName}.");
         }
     }
 }
