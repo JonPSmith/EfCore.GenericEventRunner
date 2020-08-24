@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-
 using Microsoft.EntityFrameworkCore;
 using StatusGeneric;
 
@@ -19,8 +18,8 @@ namespace GenericEventRunner.ForSetup
         /// This holds the list of actions to be run after DetectChanges is called, but before SaveChanges is called
         /// NOTE: The BeforeSaveEvents will be run before these actions
         /// </summary>
-        public List<(Type dbContext, Action<object> action)> ActionsToRunAfterDetectChanges { get; private set; }
-            = new List<(Type dbContext, Action<object> action)>();
+        public List<(Type dbContextType, Action<object> action)> ActionsToRunAfterDetectChanges { get; private set; }
+            = new List<(Type dbContextType, Action<object> action)>();
 
         /// <summary>
         /// This limits the number of times it will look for new events from the BeforeSave events.
@@ -61,7 +60,7 @@ namespace GenericEventRunner.ForSetup
         /// <param name="runAfterDetectChanges"></param>
         public void AddActionToRunAfterDetectChanges<TContext>(Action<TContext> runAfterDetectChanges)  where TContext : DbContext
         {
-            ActionsToRunAfterDetectChanges.Add(((Type dbContext, Action<object> action))(dbContext: typeof(TContext),  action: runAfterDetectChanges));
+            ActionsToRunAfterDetectChanges.Add(((Type dbContextType, Action<object> action))(dbContextType: typeof(TContext),  action: runAfterDetectChanges));
         }
 
         /// <summary>

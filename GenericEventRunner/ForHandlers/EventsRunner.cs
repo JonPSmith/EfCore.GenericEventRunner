@@ -4,9 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading.Tasks;
-using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers.Internal;
 using GenericEventRunner.ForSetup;
@@ -23,7 +21,7 @@ namespace GenericEventRunner.ForHandlers
     /// </summary>
     public class EventsRunner : IEventsRunner
     {
-        private readonly FindRunHandlers _findRunHandlers;
+        private readonly RunEachTypeOfEvents _eachEventRunner;
         private readonly IGenericEventRunnerConfig _config;
 
         /// <summary>
@@ -35,7 +33,7 @@ namespace GenericEventRunner.ForHandlers
         public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, IGenericEventRunnerConfig config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
-            _findRunHandlers = new FindRunHandlers(serviceProvider, logger, _config);
+            _eachEventRunner = new RunEachTypeOfEvents(serviceProvider, logger, _config);
         }
 
         /// <summary>
@@ -48,34 +46,74 @@ namespace GenericEventRunner.ForHandlers
         public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<IEnumerable<EntityEntry>> getTrackedEntities,  
             Func<int> callBaseSaveChanges)
         {
+            IStatusGeneric<int> RunTransactionWithDuringSaveChangesEvents()
+            {
+                var localStatus = new StatusGenericHandler<int>();
+                using (var transaction = context.Database.BeginTransaction())
+                {
+                    var duringPreValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(getTrackedEntities, true, false);
+                    if (!duringPreValueTask.IsCompleted)
+                        throw new InvalidOperationException("Can only run sync tasks");
+                    localStatus.CombineStatuses(duringPreValueTask.Result);
+
+                    var transactionSaveChanges = CallSaveChangesWithExceptionHandler(context, callBaseSaveChanges);
+                    if (localStatus.CombineStatuses(transactionSaveChanges).HasErrors)
+                        return localStatus;
+
+                    localStatus.SetResult(transactionSaveChanges.Result);
+
+                    var duringPostValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(getTrackedEntities, false, false);
+                    if (!duringPostValueTask.IsCompleted)
+                        throw new InvalidOperationException("Can only run sync tasks");
+                    if (localStatus.CombineStatuses(duringPostValueTask.Result).HasErrors)
+                        return localStatus;
+
+                    transaction.Commit();
+                }
+
+                return localStatus;
+            }
+
+
             var status = new StatusGenericHandler<int>();
-            var beforeValueTask = RunBeforeSaveChangesEventsAsync(getTrackedEntities, false);
+
+
+
+            var beforeValueTask = _eachEventRunner.RunBeforeSaveChangesEventsAsync(getTrackedEntities, false);
             if (!beforeValueTask.IsCompleted)
                 throw new InvalidOperationException("Can only run sync tasks");
             status.CombineStatuses(beforeValueTask.Result);
             if (!status.IsValid) 
                 return status;
 
+            context.ChangeTracker.DetectChanges();
+
+            //This runs any actions adding to the config that match this DbContext type
+            RunAnyAfterDetectChangesActions(context);
+
             //Call SaveChanges with catch for exception handler
-            do
+            IStatusGeneric<int> callSaveChangesStatus = null;
+            if (_config.NotUsingDuringSaveHandlers || context.Database.CurrentTransaction != null)
             {
-                try
-                {
-                    status.SetResult(callBaseSaveChanges.Invoke());
-                    break; //This breaks out of the do/while
-                }
-                catch (Exception e)
-                {
-                    var exceptionStatus = _config.SaveChangesExceptionHandler?.Invoke(e, context);
-                    if (exceptionStatus == null)
-                        //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
-                        throw;
-                    //SaveChangesExceptionHandler ran, so combine its error into the outer status
-                    status.CombineStatuses(exceptionStatus);
-                }
-                //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
-            } while (status.IsValid);
-            var afterValueTask = RunAfterSaveChangesEventsAsync(getTrackedEntities, false);
+                //Either we doing need a transaction, or someone else is managing the transaction so we just call SaveChanges
+                callSaveChangesStatus = CallSaveChangesWithExceptionHandler(context, callBaseSaveChanges);
+            }
+            else if (context.Database.CreateExecutionStrategy().RetriesOnFailure)
+            {
+                callSaveChangesStatus = context.Database.CreateExecutionStrategy().Execute(RunTransactionWithDuringSaveChangesEvents);
+            }
+            else
+            {
+                callSaveChangesStatus = RunTransactionWithDuringSaveChangesEvents();
+            }
+            
+            if (status.CombineStatuses(callSaveChangesStatus).HasErrors)
+                return status;
+
+            //Copy over the saveChanges resus
+            status.SetResult(callSaveChangesStatus.Result);
+
+            var afterValueTask = _eachEventRunner.RunAfterSaveChangesEventsAsync(getTrackedEntities, false);
             if (!afterValueTask.IsCompleted && !afterValueTask.IsFaulted)
                 throw new InvalidOperationException("Can only run sync tasks");
             if (afterValueTask.IsFaulted)
@@ -96,7 +134,7 @@ namespace GenericEventRunner.ForHandlers
             Func<Task<int>> callBaseSaveChangesAsync)
         {
             var status = new StatusGenericHandler<int>();
-            status.CombineStatuses(await RunBeforeSaveChangesEventsAsync(getTrackedEntities, true).ConfigureAwait(false));
+            status.CombineStatuses(await _eachEventRunner.RunBeforeSaveChangesEventsAsync(getTrackedEntities, true).ConfigureAwait(false));
             if (!status.IsValid)
                 return status;
 
@@ -105,7 +143,7 @@ namespace GenericEventRunner.ForHandlers
             {
                 try
                 {
-                    status.SetResult(await callBaseSaveChangesAsync.Invoke().ConfigureAwait(false));
+                    status.SetResult(await callBaseSaveChangesAsync().ConfigureAwait(false));
                     break; //This breaks out of the do/while
                 }
                 catch (Exception e)
@@ -119,85 +157,53 @@ namespace GenericEventRunner.ForHandlers
                 }
                 //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
             } while (status.IsValid);
-            await RunAfterSaveChangesEventsAsync(getTrackedEntities, true).ConfigureAwait(false);
+            await _eachEventRunner.RunAfterSaveChangesEventsAsync(getTrackedEntities, true).ConfigureAwait(false);
             return status;
         }
 
         //------------------------------------------
         // private methods
 
-        private async ValueTask<IStatusGeneric> RunBeforeSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
+        private void RunAnyAfterDetectChangesActions(DbContext context)
         {
-            var status = new StatusGenericHandler();
+            _config.ActionsToRunAfterDetectChanges
+                .Where(x => context.GetType() == x.dbContextType)
+                .ToList().ForEach(x => x.action(context));
+        }
 
-            //This has to run until there are no new events, because one event might trigger another event
-            bool shouldRunAgain;
-            int loopCount = 1;
+        private IStatusGeneric<int> CallSaveChangesWithExceptionHandler(DbContext context, Func<int> callBaseSaveChanges)
+        {
+            var status = new StatusGenericHandler<int>();
             do
             {
-                var eventsToRun = new List<EntityAndEvent>();
-                foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithBeforeSaveEvents>())
+                try
                 {
-                    eventsToRun.AddRange(entity.GetBeforeSaveEventsThenClear()
-                        .Select(x => new EntityAndEvent(entity, x)));
+                    context.ChangeTracker.AutoDetectChangesEnabled = false;
+
+                    status.SetResult(callBaseSaveChanges());
+                    break; //This breaks out of the do/while
+                }
+                catch (Exception e)
+                {
+                    var exceptionStatus = _config.SaveChangesExceptionHandler?.Invoke(e, context);
+                    if (exceptionStatus == null)
+                        //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
+                        throw;
+                    //SaveChangesExceptionHandler ran, so combine its error into the outer status
+                    status.CombineStatuses(exceptionStatus);
+                }
+                finally
+                {
+                    context.ChangeTracker.AutoDetectChangesEnabled = true;
                 }
 
-                shouldRunAgain = false;
-                foreach (var entityAndEvent in eventsToRun)
-                {
-                    shouldRunAgain = true;
-                    status.CombineStatuses( await _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, loopCount, true, allowAsync)
-                        .ConfigureAwait(false));
-                    if (!status.IsValid && _config.StopOnFirstBeforeHandlerThatHasAnError)
-                        break;
-                }
-                if (loopCount++ > _config.MaxTimesToLookForBeforeEvents)
-                    throw new GenericEventRunnerException(
-                        $"The BeforeSave event loop exceeded the config's {nameof(GenericEventRunnerConfig.MaxTimesToLookForBeforeEvents)}" +
-                        $" value of {_config.MaxTimesToLookForBeforeEvents}. This implies a circular sets of events. " +
-                        "Look at EventsRunner Information logs for more information on what event handlers were running.",
-                        eventsToRun.Last().CallingEntity, eventsToRun.Last().DomainEvent);
-            } while (shouldRunAgain && (status.IsValid || !_config.StopOnFirstBeforeHandlerThatHasAnError));
-
-            if (!status.IsValid)
-            {
-                //If errors then clear any extra before/after events.
-                //We need to do this to ensure another call to SaveChanges doesn't get the old events
-                getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithBeforeSaveEvents>()
-                    .ToList().ForEach(x => x.GetBeforeSaveEventsThenClear());
-                getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithAfterSaveEvents>()
-                    .ToList().ForEach(x => x.GetAfterSaveEventsThenClear());
-                
-            }
+                //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
+            } while (status.IsValid);
 
             return status;
         }
 
 
-        //NOTE: This had problems throwing an exception (don't know why - RunBeforeSaveChangesEventsAsync work!?).
-        //Having it return an exception fixed it
-        private async ValueTask<Exception> RunAfterSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
-        {
-            if (_config.NotUsingAfterSaveHandlers)
-                //Skip this stage if NotUsingAfterSaveHandlers is true
-                return null;
-
-            var eventsToRun = new List<EntityAndEvent>();
-            foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithAfterSaveEvents>())
-            {
-                eventsToRun.AddRange(entity.GetAfterSaveEventsThenClear()
-                    .Select(x => new EntityAndEvent(entity, x)));
-            }
-
-            foreach (var entityAndEvent in eventsToRun)
-            {
-                await _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, false, allowAsync).ConfigureAwait(false);
-            }
-
-            return null;
-        }
 
     }
 }

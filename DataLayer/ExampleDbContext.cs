@@ -13,6 +13,7 @@ namespace DataLayer
         public DbSet<LineItem> LineItems { get; set; }
         public DbSet<ProductStock> ProductStocks { get; set; }
         public DbSet<TaxRate> TaxRates { get; set; }
+        public DbSet<Book> Books { get; set; }
 
         public ExampleDbContext(DbContextOptions<ExampleDbContext> options, IEventsRunner eventRunner = null)
             : base(options, eventRunner)
