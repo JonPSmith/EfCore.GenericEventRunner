@@ -87,8 +87,7 @@ namespace GenericEventRunner.ForDbContext
             if (_eventsRunner == null)
                 return base.SaveChanges(acceptAllChangesOnSuccess);
 
-            StatusFromLastSaveChanges = _eventsRunner.RunEventsBeforeAfterSaveChanges(this, () => ChangeTracker.Entries(),
-                () => base.SaveChanges(acceptAllChangesOnSuccess));
+            StatusFromLastSaveChanges = SaveChangesWithStatus(acceptAllChangesOnSuccess);
 
             if (StatusFromLastSaveChanges.IsValid)
                 return StatusFromLastSaveChanges.Result;
@@ -109,8 +108,8 @@ namespace GenericEventRunner.ForDbContext
             if (_eventsRunner == null)
                 return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
 
-            StatusFromLastSaveChanges = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(this, () => ChangeTracker.Entries(),
-                () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken)).ConfigureAwait(false);
+            StatusFromLastSaveChanges = await SaveChangesWithStatusAsync(acceptAllChangesOnSuccess, cancellationToken)
+                .ConfigureAwait(false);
 
             if (StatusFromLastSaveChanges.IsValid)
                 return StatusFromLastSaveChanges.Result;

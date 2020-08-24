@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.1.0-preview002</PackageVersion>
+    <PackageVersion>2.1.0-preview004</PackageVersion>
     <Version>2.1.0</Version>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
     <FileVersion>2.1.0.0</FileVersion>
@@ -22,7 +22,9 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      - Defines class + interface for EfCore.GenericEventRunner when implementing a Clean Code architecture
+      - New Feature: Added during event and event handlers. The event is called within a transaction.
+      - New feature: DuringSaveStage attrbute. Allows you move the during event from running after SaveChanges in the transaction to before the call to SaveChanges, but after DetectChanges has been called.
+      - New Feature: You can now pick what types of events an entity supports by applying the approriate interfaces: IEntityWithBeforeSaveEvents, IEntityWithDuringSaveEvents, and IEntityWithAfterSaveEvents
     </PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerDomainNuGetIcon128.png</PackageIconUrl>
   </PropertyGroup>

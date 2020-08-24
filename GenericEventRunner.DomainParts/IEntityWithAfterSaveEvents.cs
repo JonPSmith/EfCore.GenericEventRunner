@@ -5,8 +5,14 @@ using System.Collections.Generic;
 
 namespace GenericEventRunner.DomainParts
 {
+    /// <summary>
+    /// Add this interface to an entity class to support AfterSaveEvents
+    /// </summary>
     public interface IEntityWithAfterSaveEvents
     {
+        /// <summary>
+        /// This gets all the events in the AfterSaveEvents list, and clears that list at the same time
+        /// </summary>
         ICollection<IDomainEvent> GetAfterSaveEventsThenClear();
     }
 }

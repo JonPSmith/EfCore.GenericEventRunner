@@ -13,6 +13,10 @@ namespace GenericEventRunner.DomainParts
         /// </summary>
         BeforeSave,
         /// <summary>
+        /// This puts an event into the DuringSaveEvents list
+        /// </summary>
+        DuringSave,
+        /// <summary>
         /// This puts an event into AfterSaveEvents list
         /// </summary>
         AfterSave,
@@ -20,5 +24,6 @@ namespace GenericEventRunner.DomainParts
         /// This puts an event into both the BeforeSaveEvents list and the AfterSaveEvents list
         /// </summary>
         BeforeAndAfterSave
+
     }
 }
