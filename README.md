@@ -4,6 +4,8 @@ This library allows users of Entity Framework Core (EF Core) to add events to th
 
 Version 2 how supports async event handlers and, via the [EfCore.GenericEventRunner.DomainParts](https://www.nuget.org/packages/EfCore.GenericEventRunner.DomainParts) library, it can support a Clean Code architecture. 
 
+Preview 2.1 supports more sorts of events, including ones that run withing a transaction where SaveChanges is called. This allows you to implement Integration events across multiple parts of your application.
+
 This is an open source project (MIT license) available [on GitHub](https://github.com/JonPSmith/EfCore.GenericEventRunner) and as a [NuGet package](https://www.nuget.org/packages/EfCore.GenericEventRunner/).
 
 ## Useful articles

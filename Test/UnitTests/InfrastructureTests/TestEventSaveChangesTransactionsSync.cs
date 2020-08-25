@@ -83,6 +83,82 @@ namespace Test.UnitTests.InfrastructureTests
         }
 
         [Fact]
+        public void TestAddBookCausesDuringEventLogsInTransactionCommitOk()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                using (var transaction = context.Database.BeginTransaction())
+                {
+
+                    //ATTEMPT
+                    var book = Book.CreateBookWithEvent("test");
+                    context.Add(book);
+                    context.SaveChanges();
+
+                    transaction.Commit();
+                }
+
+                //VERIFY
+                context.Books.Count().ShouldEqual(1);
+                logs.Count.ShouldEqual(2);
+                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandler.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandler. Unique value = ");
+            }
+        }
+
+        [Fact]
+        public void TestAddBookCausesDuringEventLogsInTransactionRollbackOk()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                using (var transaction = context.Database.BeginTransaction())
+                {
+
+                    //ATTEMPT
+                    var book = Book.CreateBookWithEvent("test");
+                    context.Add(book);
+                    context.SaveChanges();
+                }//rollback on dispose
+
+                //VERIFY
+                context.Books.Count().ShouldEqual(0);
+                logs.Count.ShouldEqual(2);
+                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandler.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandler. Unique value = ");
+            }
+        }
+
+        [Fact]
+        public void TestAddBookCausesDuringEventLogsInTransactionWithRetryCommitOk()
+        {
+            //SETUP
+            var options = this.CreateOptionsWithRetryExecutions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateDbWithDiForHandlers<ExampleDbContext, OrderCreatedHandler>(logs);
+            {
+                context.Database.EnsureCreated();
+                context.WipeAllDataFromDatabase();
+
+                //ATTEMPT
+                var book = Book.CreateBookWithEvent("test");
+                context.Add(book);
+                context.SaveChanges();
+
+                //VERIFY
+                context.Books.Count().ShouldEqual(1);
+                logs.Count.ShouldEqual(2);
+                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandler.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandler. Unique value = ");
+            }
+        }
+
+        [Fact]
         public void TestAddBookNoActionToUpdateDates()
         {
             //SETUP

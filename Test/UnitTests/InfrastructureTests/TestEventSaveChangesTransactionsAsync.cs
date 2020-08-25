@@ -27,7 +27,7 @@ namespace Test.UnitTests.InfrastructureTests
     public class TestEventSaveChangesTransactionsAsync
     {
         [Fact]
-        public void TestAddBookAddsDuringEvent()
+        public async Task TestAddBookAddsDuringEvent()
         {
             //SETUP
 
@@ -78,6 +78,80 @@ namespace Test.UnitTests.InfrastructureTests
                 logs[1].Message.ShouldStartWith("Log from NewBookDuringButBeforeSaveEventHandlerAsync. Unique value = ");
                 logs[2].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandlerAsync.");
                 logs[3].Message.ShouldStartWith("Log from NewBookDuringEventHandlerAsync. Unique value =");
+            }
+        }
+
+        [Fact]
+        public async Task TestAddBookCausesDuringEventLogsInTransactionCommitOk()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    //ATTEMPT
+                    var book = Book.CreateBookWithEvent("test");
+                    context.Add(book);
+                    await context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+                }
+
+                //VERIFY
+                context.Books.Count().ShouldEqual(1);
+                logs.Count.ShouldEqual(2);
+                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandlerAsync.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandlerAsync. Unique value = ");
+            }
+        }
+
+        [Fact]
+        public async Task TestAddBookCausesDuringEventLogsInTransactionRollbackOk()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                using (var transaction = await context.Database.BeginTransactionAsync())
+                {
+                    //ATTEMPT
+                    var book = Book.CreateBookWithEvent("test");
+                    context.Add(book);
+                    await context.SaveChangesAsync();
+                }//rollback on dispose
+
+                //VERIFY
+                context.Books.Count().ShouldEqual(0);
+                logs.Count.ShouldEqual(2);
+                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandlerAsync.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandlerAsync. Unique value = ");
+            }
+        }
+
+        [Fact]
+        public async Task TestAddBookCausesDuringEventLogsInTransactionWithRetryCommitOk()
+        {
+            //SETUP
+            var options = this.CreateOptionsWithRetryExecutions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateDbWithDiForHandlers<ExampleDbContext, OrderCreatedHandler>(logs);
+            {
+                context.Database.EnsureCreated();
+                context.WipeAllDataFromDatabase();
+
+                //ATTEMPT
+                var book = Book.CreateBookWithEvent("test");
+                context.Add(book);
+                await context.SaveChangesAsync();
+
+                //VERIFY
+                context.Books.Count().ShouldEqual(1);
+                logs.Count.ShouldEqual(2);
+                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandlerAsync.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandlerAsync. Unique value = ");
             }
         }
 
