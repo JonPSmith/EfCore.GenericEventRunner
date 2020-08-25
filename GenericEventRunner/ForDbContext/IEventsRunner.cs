@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using GenericEventRunner.DomainParts;
 using Microsoft.EntityFrameworkCore;
@@ -30,8 +31,9 @@ namespace GenericEventRunner.ForDbContext
         /// </summary>
         /// <param name="context"></param>
         /// <param name="callBaseSaveChangesAsync">This calls the base SaveChangesAsync.</param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context,
-            Func<Task<int>> callBaseSaveChangesAsync);
+            Func<Task<int>> callBaseSaveChangesAsync, CancellationToken cancellationToken);
     }
 }

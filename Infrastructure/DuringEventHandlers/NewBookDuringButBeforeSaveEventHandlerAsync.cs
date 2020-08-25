@@ -2,6 +2,7 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
+using System.Threading.Tasks;
 using EntityClasses.DomainEvents;
 using GenericEventRunner.ForHandlers;
 using Microsoft.Extensions.Logging;
@@ -9,18 +10,18 @@ using StatusGeneric;
 
 namespace Infrastructure.DuringEventHandlers
 {
-    public class NewBookAfterSaveChangesEvent : IDuringSaveEventHandler<NewBookEvent>
+    public class NewBookDuringButBeforeSaveEventHandlerAsync : IDuringSaveEventHandlerAsync<NewBookEventButBeforeSave>
     {
         private readonly ILogger<EventsRunner> _logger;
 
-        public NewBookAfterSaveChangesEvent(ILogger<EventsRunner> logger)
+        public NewBookDuringButBeforeSaveEventHandlerAsync(ILogger<EventsRunner> logger)
         {
             _logger = logger;
         }
 
-        public IStatusGeneric Handle(object callingEntity, NewBookEvent domainEvent, Guid uniqueKey)
+        public async Task<IStatusGeneric> HandleAsync(object callingEntity, NewBookEventButBeforeSave domainEvent, Guid uniqueKey)
         {
-            _logger.LogInformation($"Log from NewBookAfterSaveChangesEvent. Unique value = {uniqueKey}");
+            _logger.LogInformation($"Log from {GetType().Name}. Unique value = {uniqueKey}");
             return new StatusGenericHandler();
         }
     }

@@ -22,7 +22,7 @@ using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests.InfrastructureTests
 {
-    public class TestEventSaveChangesTransactionsSync
+    public class TestEventSaveChangesTransactionsAsync
     {
         [Fact]
         public void TestAddBookAddsDuringEvent()
@@ -37,7 +37,7 @@ namespace Test.UnitTests.InfrastructureTests
         }
 
         [Fact]
-        public void TestAddBookCausesDuringEventLogs()
+        public async Task TestAddBookCausesDuringEventLogsAsync()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
@@ -47,17 +47,17 @@ namespace Test.UnitTests.InfrastructureTests
                 //ATTEMPT
                 var book = Book.CreateBookWithEvent("test");
                 context.Add(book);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
 
                 //VERIFY
                 logs.Count.ShouldEqual(2);
-                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandler.");
-                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandler. Unique value = ");
+                logs[0].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandlerAsync.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandlerAsync. Unique value = ");
             }
         }
 
         [Fact]
-        public void TestAddBookCausesDuringEventLogsWithBeforeSave()
+        public async Task TestAddBookCausesDuringEventLogsWithBeforeSaveAsync()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
@@ -68,14 +68,14 @@ namespace Test.UnitTests.InfrastructureTests
                 var book = Book.CreateBookWithEvent("test");
                 book.AddEvent(new NewBookEventButBeforeSave(), EventToSend.DuringSave);
                 context.Add(book);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
 
                 //VERIFY
                 logs.Count.ShouldEqual(4);
-                logs[0].Message.ShouldEqual("D1: About to run a DuringBeforeSave event handler Infrastructure.DuringEventHandlers.NewBookDuringButBeforeSaveEventHandler.");
-                logs[1].Message.ShouldStartWith("Log from NewBookDuringButBeforeSaveEventHandler. Unique value = ");
-                logs[2].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandler.");
-                logs[3].Message.ShouldStartWith("Log from NewBookDuringEventHandler. Unique value =");
+                logs[0].Message.ShouldEqual("D1: About to run a DuringBeforeSave event handler Infrastructure.DuringEventHandlers.NewBookDuringButBeforeSaveEventHandlerAsync.");
+                logs[1].Message.ShouldStartWith("Log from NewBookDuringButBeforeSaveEventHandlerAsync. Unique value = ");
+                logs[2].Message.ShouldEqual("D1: About to run a DuringSave event handler Infrastructure.DuringEventHandlers.NewBookDuringEventHandlerAsync.");
+                logs[3].Message.ShouldStartWith("Log from NewBookDuringEventHandlerAsync. Unique value =");
             }
         }
     }

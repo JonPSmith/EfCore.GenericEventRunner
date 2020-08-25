@@ -20,11 +20,11 @@ namespace GenericEventRunner.ForHandlers.Internal
                 case (BeforeDuringOrAfter.BeforeSave, true):
                     WrapperType = typeof(BeforeSaveHandlerAsync<>).MakeGenericType(eventType);
                     break;
-                case (BeforeDuringOrAfter.DuringButBeforeSaveChanges, false):
+                case (BeforeDuringOrAfter.DuringBeforeSave, false):
                 case (BeforeDuringOrAfter.DuringSave, false):
                     WrapperType = typeof(DuringSaveHandler<>).MakeGenericType(eventType);
                     break;
-                case (BeforeDuringOrAfter.DuringButBeforeSaveChanges, true):
+                case (BeforeDuringOrAfter.DuringBeforeSave, true):
                 case (BeforeDuringOrAfter.DuringSave, true):
                     WrapperType = typeof(DuringSaveHandlerAsync<>).MakeGenericType(eventType);
                     break;

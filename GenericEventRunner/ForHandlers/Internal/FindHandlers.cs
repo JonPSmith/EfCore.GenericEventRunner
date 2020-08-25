@@ -71,10 +71,10 @@ namespace GenericEventRunner.ForHandlers.Internal
                     return typeof(IBeforeSaveEventHandler<>);
                 case (BeforeDuringOrAfter.BeforeSave, true):
                     return typeof(IBeforeSaveEventHandlerAsync<>);
-                case (BeforeDuringOrAfter.DuringButBeforeSaveChanges, false):
+                case (BeforeDuringOrAfter.DuringBeforeSave, false):
                 case (BeforeDuringOrAfter.DuringSave, false):
                     return typeof(IDuringSaveEventHandler<>);
-                case (BeforeDuringOrAfter.DuringButBeforeSaveChanges, true):
+                case (BeforeDuringOrAfter.DuringBeforeSave, true):
                 case (BeforeDuringOrAfter.DuringSave, true):
                     return typeof(IDuringSaveEventHandlerAsync<>);
                 case (BeforeDuringOrAfter.AfterSave, false):

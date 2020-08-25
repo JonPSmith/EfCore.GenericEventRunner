@@ -14,7 +14,7 @@ using StatusGeneric;
 
 namespace GenericEventRunner.ForHandlers.Internal
 {
-    internal enum BeforeDuringOrAfter { BeforeSave, DuringButBeforeSaveChanges, DuringSave, AfterSave }
+    internal enum BeforeDuringOrAfter { BeforeSave, DuringBeforeSave, DuringSave, AfterSave }
 
     internal class RunEachTypeOfEvents
     {
@@ -115,17 +115,19 @@ namespace GenericEventRunner.ForHandlers.Internal
         public async ValueTask<IStatusGeneric> RunDuringSaveChangesEventsAsync(DbContext context, bool postSaveChanges, bool allowAsync)
         {
             var status = new StatusGenericHandler();
-
+            var eventType = postSaveChanges
+                ? BeforeDuringOrAfter.DuringSave
+                : BeforeDuringOrAfter.DuringBeforeSave;
             foreach (var entityAndEvent in postSaveChanges ? _duringAfterEvents : _duringBeforeEvents)
             {
                 if (allowAsync)
                     status.CombineStatuses(await _findRunHandlers.RunHandlersForEventAsync(
-                            entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, true)
+                            entityAndEvent, 1, eventType, true)
                         .ConfigureAwait(false));
                 else
                 {
                     var findRunStatus =
-                        _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, false);
+                        _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, eventType, false);
                     if (!findRunStatus.IsCompleted)
                         throw new InvalidOperationException("Can only run sync tasks");
                     status.CombineStatuses(findRunStatus.Result);
