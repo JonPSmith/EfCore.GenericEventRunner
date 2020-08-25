@@ -105,20 +105,19 @@ namespace Test.UnitTests.InfrastructureTests
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
             var config = new GenericEventRunnerConfig();
-
+            config.AddActionToRunAfterDetectChanges<ExampleDbContext>(localContext =>
+            {
+                foreach (var entity in localContext.ChangeTracker.Entries()
+                    .Where(e =>
+                        e.State == EntityState.Added ||
+                        e.State == EntityState.Modified))
+                {
+                    var tracked = entity.Entity as ICreatedUpdated;
+                    tracked?.LogChange(entity.State == EntityState.Added, entity);
+                }
+            });
             var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(null, config);
             {
-                config.AddActionToRunAfterDetectChanges<ExampleDbContext>(() =>
-                {
-                    foreach (var entity in context.ChangeTracker.Entries()
-                        .Where(e =>
-                            e.State == EntityState.Added ||
-                            e.State == EntityState.Modified))
-                    {
-                        var tracked = entity.Entity as ICreatedUpdated;
-                        tracked?.LogChange(entity.State == EntityState.Added, entity);
-                    }
-                });
                 //ATTEMPT
                 var book = Book.CreateBookWithEvent("test");
                 context.Add(book);
