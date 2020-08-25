@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForSetup;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StatusGeneric;
 
@@ -21,14 +21,41 @@ namespace GenericEventRunner.ForHandlers.Internal
         private readonly FindRunHandlers _findRunHandlers;
         private readonly IGenericEventRunnerConfig _config;
 
+        private List<EntityAndEvent> _duringBeforeEvents;
+        private List<EntityAndEvent> _duringAfterEvents;
+
         public RunEachTypeOfEvents(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, IGenericEventRunnerConfig config)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _findRunHandlers = new FindRunHandlers(serviceProvider, logger, _config);
         }
 
-        public async ValueTask<IStatusGeneric> RunBeforeSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
+        public bool SetupDuringEvents(DbContext context)
+        {
+            var duringEvents = new List<EntityAndEvent>();
+            foreach (var entityEntry in context.ChangeTracker.Entries<IEntityWithDuringSaveEvents>())
+            {
+                duringEvents.AddRange(entityEntry.Entity.GetDuringSaveEvents()
+                    .Select(x => new EntityAndEvent(entityEntry.Entity, x)));
+            }
+
+            if (!duringEvents.Any())
+                return false;
+
+            //Find the events marked to run before SaveChanges
+            _duringBeforeEvents = duringEvents
+                .Where(x => x.DomainEvent.GetType()
+                                .GetCustomAttribute<DuringSaveStageAttribute>()?.WhenToExecute ==
+                            DuringSaveStages.BeforeSaveChanges)
+                .ToList();
+
+            duringEvents.RemoveAll(x => _duringBeforeEvents.Contains(x));
+            _duringAfterEvents = duringEvents;
+
+            return true;
+        }
+
+        public async ValueTask<IStatusGeneric> RunBeforeSaveChangesEventsAsync(DbContext context, bool allowAsync)
         {
             var status = new StatusGenericHandler();
 
@@ -38,10 +65,10 @@ namespace GenericEventRunner.ForHandlers.Internal
             do
             {
                 var eventsToRun = new List<EntityAndEvent>();
-                foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithBeforeSaveEvents>())
+                foreach (var entityEntry in context.ChangeTracker.Entries<IEntityWithBeforeSaveEvents>())
                 {
-                    eventsToRun.AddRange(entity.GetBeforeSaveEventsThenClear()
-                        .Select(x => new EntityAndEvent(entity, x)));
+                    eventsToRun.AddRange(entityEntry.Entity.GetBeforeSaveEventsThenClear()
+                        .Select(x => new EntityAndEvent(entityEntry.Entity, x)));
                 }
 
                 shouldRunAgain = false;
@@ -75,51 +102,35 @@ namespace GenericEventRunner.ForHandlers.Internal
             {
                 //If errors then clear any extra before/after events.
                 //We need to do this to ensure another call to SaveChanges doesn't get the old events
-                getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithBeforeSaveEvents>()
-                    .ToList().ForEach(x => x.GetBeforeSaveEventsThenClear());
-                getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithAfterSaveEvents>()
-                    .ToList().ForEach(x => x.GetAfterSaveEventsThenClear());
+                context.ChangeTracker.Entries<IEntityWithBeforeSaveEvents>()
+                    .ToList().ForEach(x => x.Entity.GetBeforeSaveEventsThenClear());
+                context.ChangeTracker.Entries<IEntityWithAfterSaveEvents>()
+                    .ToList().ForEach(x => x.Entity.GetAfterSaveEventsThenClear());
 
             }
 
             return status;
         }
 
-        public async ValueTask<IStatusGeneric> RunDuringSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
+        public async ValueTask<IStatusGeneric> RunDuringSaveChangesEventsAsync(DbContext context, bool postSaveChanges, bool allowAsync)
         {
             var status = new StatusGenericHandler();
 
-            var allDuringEvents = new List<EntityAndEvent>();
-            foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithDuringSaveEvents>())
-            {
-                allDuringEvents.AddRange(entity.GetDuringSaveEvents()
-                    .Select(x => new EntityAndEvent(entity, x)));
-            }
-
-            //Find the events marked to run before SaveChanges
-            var duringBeforeEvents = allDuringEvents
-                .Where(x => x.DomainEvent.GetType()
-                                .GetCustomAttribute<DuringSaveStageAttribute>()?.WhenToExecute ==
-                            DuringSaveStages.BeforeSaveChanges)
-                .ToList();
-
-            foreach (EntityAndEvent entityAndEvent in duringBeforeEvents)
+            foreach (var entityAndEvent in postSaveChanges ? _duringAfterEvents : _duringBeforeEvents)
             {
                 if (allowAsync)
                     status.CombineStatuses(await _findRunHandlers.RunHandlersForEventAsync(
-                            entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, allowAsync)
+                            entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, true)
                         .ConfigureAwait(false));
                 else
                 {
                     var findRunStatus =
-                        _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, allowAsync);
+                        _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, BeforeDuringOrAfter.DuringButBeforeSaveChanges, false);
                     if (!findRunStatus.IsCompleted)
                         throw new InvalidOperationException("Can only run sync tasks");
                     status.CombineStatuses(findRunStatus.Result);
                 }
             }
-
 
             return status;
         }
@@ -127,8 +138,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 
         //NOTE: This had problems throwing an exception (don't know why - RunBeforeSaveChangesEventsAsync work!?).
         //Having it return an exception fixed it
-        public async ValueTask<Exception> RunAfterSaveChangesEventsAsync(
-            Func<IEnumerable<EntityEntry>> getTrackedEntities, bool allowAsync)
+        public async ValueTask<Exception> RunAfterSaveChangesEventsAsync(DbContext context, bool allowAsync)
         {
             var status = new StatusGenericHandler();
 
@@ -137,10 +147,10 @@ namespace GenericEventRunner.ForHandlers.Internal
                 return null;
 
             var eventsToRun = new List<EntityAndEvent>();
-            foreach (var entity in getTrackedEntities().Select(x => x.Entity).OfType<IEntityWithAfterSaveEvents>())
+            foreach (var entityEntry in context.ChangeTracker.Entries<IEntityWithAfterSaveEvents>())
             {
-                eventsToRun.AddRange(entity.GetAfterSaveEventsThenClear()
-                    .Select(x => new EntityAndEvent(entity, x)));
+                eventsToRun.AddRange(entityEntry.Entity.GetAfterSaveEventsThenClear()
+                    .Select(x => new EntityAndEvent(entityEntry.Entity, x)));
             }
 
             foreach (var entityAndEvent in eventsToRun)
@@ -160,5 +170,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 
             return null;
         }
+
+
     }
 }

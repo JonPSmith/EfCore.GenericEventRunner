@@ -49,10 +49,9 @@ namespace Test.UnitTests.InfrastructureTests
                 context.SaveChanges();
 
                 //VERIFY
-                logs.Count.ShouldEqual(3);
-                logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
-                logs[1].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
-                logs[2].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
+                logs.Count.ShouldEqual(2);
+                logs[0].Message.ShouldEqual("D1: About to run a DuringButBeforeSaveChanges event handler Infrastructure.DuringEventHandlers.NewBookAfterSaveChangesEvent.");
+                logs[1].Message.ShouldStartWith("Log from NewBookAfterSaveChangesEvent. Unique value = ");
             }
         }
     }

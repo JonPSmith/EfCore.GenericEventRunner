@@ -40,46 +40,43 @@ namespace GenericEventRunner.ForHandlers
         /// This runs the events before and after the base SaveChanges method is run
         /// </summary>
         /// <param name="context">The current DbContext</param>
-        /// <param name="getTrackedEntities">A function to get the tracked entities</param>
         /// <param name="callBaseSaveChanges">A function that is linked to the base SaveChanges in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<IEnumerable<EntityEntry>> getTrackedEntities,  
-            Func<int> callBaseSaveChanges)
+        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<int> callBaseSaveChanges)
         {
             IStatusGeneric<int> RunTransactionWithDuringSaveChangesEvents()
             {
                 var localStatus = new StatusGenericHandler<int>();
-                using (var transaction = context.Database.BeginTransaction())
-                {
-                    var duringPreValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(
-                        getTrackedEntities, false);
-                    if (!duringPreValueTask.IsCompleted)
-                        throw new InvalidOperationException("Can only run sync tasks");
-                    localStatus.CombineStatuses(duringPreValueTask.Result);
+                //If there is a current transaction then use that, otherwise 
+                using var transaction = context.Database.CurrentTransaction == null 
+                    ? context.Database.BeginTransaction()
+                    : null;
+                var duringPreValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(context, false, false);
+                if (!duringPreValueTask.IsCompleted)
+                    throw new InvalidOperationException("Can only run sync tasks");
+                localStatus.CombineStatuses(duringPreValueTask.Result);
 
-                    var transactionSaveChanges = CallSaveChangesWithExceptionHandler(context, callBaseSaveChanges);
-                    if (localStatus.CombineStatuses(transactionSaveChanges).HasErrors)
-                        return localStatus;
+                var transactionSaveChanges = CallSaveChangesWithExceptionHandler(context, callBaseSaveChanges);
+                if (localStatus.CombineStatuses(transactionSaveChanges).HasErrors)
+                    return localStatus;
 
-                    localStatus.SetResult(transactionSaveChanges.Result);
+                localStatus.SetResult(transactionSaveChanges.Result);
 
-                    var duringPostValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(
-                        getTrackedEntities, false);
-                    if (!duringPostValueTask.IsCompleted)
-                        throw new InvalidOperationException("Can only run sync tasks");
-                    if (localStatus.CombineStatuses(duringPostValueTask.Result).HasErrors)
-                        return localStatus;
+                var duringPostValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(context, true,false);
+                if (!duringPostValueTask.IsCompleted)
+                    throw new InvalidOperationException("Can only run sync tasks");
+                if (localStatus.CombineStatuses(duringPostValueTask.Result).HasErrors)
+                    return localStatus;
 
-                    transaction.Commit();
-                }
+                transaction?.Commit();
 
                 return localStatus;
             }
 
-
             var status = new StatusGenericHandler<int>();
+            var hasDuringEvents = _eachEventRunner.SetupDuringEvents(context);
 
-            var beforeValueTask = _eachEventRunner.RunBeforeSaveChangesEventsAsync(getTrackedEntities, false);
+            var beforeValueTask = _eachEventRunner.RunBeforeSaveChangesEventsAsync(context, false);
             if (!beforeValueTask.IsCompleted)
                 throw new InvalidOperationException("Can only run sync tasks");
             status.CombineStatuses(beforeValueTask.Result);
@@ -93,13 +90,14 @@ namespace GenericEventRunner.ForHandlers
 
             //Call SaveChanges with catch for exception handler
             IStatusGeneric<int> callSaveChangesStatus;
-            if (_config.NotUsingDuringSaveHandlers || context.Database.CurrentTransaction != null)
+            if (!hasDuringEvents)
             {
-                //Either we doing need a transaction, or someone else is managing the transaction so we just call SaveChanges
+                //No need for a transaction as no During event. Therefore just call SaveChanges
                 callSaveChangesStatus = CallSaveChangesWithExceptionHandler(context, callBaseSaveChanges);
             }
-            else if (context.Database.CreateExecutionStrategy().RetriesOnFailure)
+            else if (context.Database.CurrentTransaction == null && context.Database.CreateExecutionStrategy().RetriesOnFailure)
             {
+                //There is no existing transactions AND we have to handle retries, then we need to wrap the transaction in a retry 
                 callSaveChangesStatus = context.Database.CreateExecutionStrategy().Execute(RunTransactionWithDuringSaveChangesEvents);
             }
             else
@@ -113,7 +111,7 @@ namespace GenericEventRunner.ForHandlers
             //Copy over the saveChanges resus
             status.SetResult(callSaveChangesStatus.Result);
 
-            var afterValueTask = _eachEventRunner.RunAfterSaveChangesEventsAsync(getTrackedEntities, false);
+            var afterValueTask = _eachEventRunner.RunAfterSaveChangesEventsAsync(context, false);
             if (!afterValueTask.IsCompleted && !afterValueTask.IsFaulted)
                 throw new InvalidOperationException("Can only run sync tasks");
             if (afterValueTask.IsFaulted)
@@ -126,15 +124,13 @@ namespace GenericEventRunner.ForHandlers
         /// This runs the events before and after the base SaveChangesAsync method is run
         /// </summary>
         /// <param name="context">The current DbContext</param>
-        /// <param name="getTrackedEntities">A function to get the tracked entities</param>
         /// <param name="callBaseSaveChangesAsync">A function that is linked to the base SaveChangesAsync in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context, 
-            Func<IEnumerable<EntityEntry>> getTrackedEntities, 
+        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context,
             Func<Task<int>> callBaseSaveChangesAsync)
         {
             var status = new StatusGenericHandler<int>();
-            status.CombineStatuses(await _eachEventRunner.RunBeforeSaveChangesEventsAsync(getTrackedEntities, true).ConfigureAwait(false));
+            status.CombineStatuses(await _eachEventRunner.RunBeforeSaveChangesEventsAsync(context, true).ConfigureAwait(false));
             if (!status.IsValid)
                 return status;
 
@@ -157,7 +153,7 @@ namespace GenericEventRunner.ForHandlers
                 }
                 //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
             } while (status.IsValid);
-            await _eachEventRunner.RunAfterSaveChangesEventsAsync(getTrackedEntities, true).ConfigureAwait(false);
+            await _eachEventRunner.RunAfterSaveChangesEventsAsync(context, true).ConfigureAwait(false);
             return status;
         }
 
