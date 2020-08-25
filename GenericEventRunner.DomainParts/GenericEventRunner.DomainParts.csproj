@@ -14,7 +14,7 @@
     <Authors>Jon P Smith</Authors>
     <Company>Selective Analytics</Company>
     <Product>EfCore.GenericEventRunner.DomainParts</Product>
-    <Description>Defines three interfaces for EfCore.GenericEventRunner when using Clean Code architecture.</Description>
+    <Description>Defines basic interfaces/classes for EfCore.GenericEventRunner when using Clean Code architecture.</Description>
     <Copyright>Copyright (c) 2020 Jon P Smith</Copyright>
     <PackageLicenseUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner</PackageProjectUrl>
