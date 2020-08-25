@@ -6,6 +6,7 @@
 - New Feature: Added during event and event handlers. The event is called within a transaction.
 - New feature: DuringSaveStage attribute. Allows you move the during event from running after SaveChanges in the transaction to before the call to SaveChanges (but after DetectChanges has been called).
 - New Feature: You can now pick what types of events an entity supports by applying the approriate interfaces: IEntityWithBeforeSaveEvents, IEntityWithDuringSaveEvents, and IEntityWithAfterSaveEvents
+- New feature: You can inject a action to be run after DeteckChanges is called. Useful for adding last created/updated times.
 
 
 ## 2.0.0
