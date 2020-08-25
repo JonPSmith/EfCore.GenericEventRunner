@@ -223,7 +223,7 @@ namespace GenericEventRunner.ForHandlers
         {
             _config.ActionsToRunAfterDetectChanges
                 .Where(x => context.GetType() == x.dbContextType)
-                .ToList().ForEach(x => x.action(context));
+                .ToList().ForEach(x => x.action());
         }
 
         private IStatusGeneric<int> CallSaveChangesWithExceptionHandler(DbContext context, Func<int> callBaseSaveChanges)

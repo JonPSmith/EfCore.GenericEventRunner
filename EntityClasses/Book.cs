@@ -5,17 +5,37 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EntityClasses.DomainEvents;
+using EntityClasses.SupportClasses;
 using GenericEventRunner.DomainParts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace EntityClasses
 {
-    public class Book : EntityEventsBase
+    public class Book : EntityEventsBase, ICreatedUpdated
     {
 
         private HashSet<Review> _reviews;
 
         public int BookId { get; private set; }
         public string Title { get; private set; }
+
+        public DateTime WhenCreatedUtc { get; private set; }
+        public DateTime LastUpdatedUtc { get; private set; }
+        public void LogChange(bool added, EntityEntry entry)
+        {
+            var timeNow = DateTime.UtcNow;
+            LastUpdatedUtc = timeNow;
+            if (added)
+            {
+                WhenCreatedUtc = timeNow;
+            }
+            else
+            {
+                entry.Property(nameof(ICreatedUpdated.LastUpdatedUtc))
+                    .IsModified = true;
+            }
+        }
 
         public IReadOnlyCollection<Review> Reviews => _reviews?.ToList();
 
@@ -25,10 +45,16 @@ namespace EntityClasses
         {
             var result = new Book
             {
-                Title = title
+                Title = title,
+                _reviews = new HashSet<Review>()
             };
             result.AddEvent(new NewBookEvent(), EventToSend.DuringSave);
             return result;
+        }
+
+        public void ChangeTitle(string newTitle)
+        {
+            Title = newTitle;
         }
 
         public void AddReview(int numStars, string comment, string voterName)
