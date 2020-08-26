@@ -100,10 +100,12 @@ namespace GenericEventRunner.ForHandlers
             {
                 //There is no existing transactions AND we have to handle retries, then we need to wrap the transaction in a retry 
                 callSaveChangesStatus = context.Database.CreateExecutionStrategy().Execute(RunTransactionWithDuringSaveChangesEvents);
+                context.ClearDuringEvents();  //clear During events after a successful transaction
             }
             else
             {
                 callSaveChangesStatus = RunTransactionWithDuringSaveChangesEvents();
+                context.ClearDuringEvents();  //clear During events after a successful transaction
             }
             
             if (status.CombineStatuses(callSaveChangesStatus).HasErrors)
@@ -186,10 +188,12 @@ namespace GenericEventRunner.ForHandlers
                 //There is no existing transactions AND we have to handle retries, then we need to wrap the transaction in a retry 
                 callSaveChangesStatus = await context.Database.CreateExecutionStrategy().ExecuteAsync(async x =>
                     await RunTransactionWithDuringSaveChangesEventsAsync().ConfigureAwait(false), cancellationToken);
+                context.ClearDuringEvents();  //clear During events after a successful transaction
             }
             else
             {
                 callSaveChangesStatus = await RunTransactionWithDuringSaveChangesEventsAsync().ConfigureAwait(false);
+                context.ClearDuringEvents();  //clear During events after a successful transaction
             }
 
             if (status.CombineStatuses(callSaveChangesStatus).HasErrors)
@@ -203,7 +207,9 @@ namespace GenericEventRunner.ForHandlers
                 }
                 catch (Exception e)
                 {
-                    var exceptionStatus = _config.SaveChangesExceptionHandler?.Invoke(e, context);
+                    IStatusGeneric exceptionStatus = null;
+                    if (_config.ExceptionHandlerDictionary.TryGetValue(context.GetType(), out var exceptionHandler))
+                        exceptionStatus = exceptionHandler(e, context);
                     if (exceptionStatus == null)
                         //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
                         throw;
@@ -240,7 +246,9 @@ namespace GenericEventRunner.ForHandlers
                 }
                 catch (Exception e)
                 {
-                    var exceptionStatus = _config.SaveChangesExceptionHandler?.Invoke(e, context);
+                    IStatusGeneric exceptionStatus = null;
+                    if (_config.ExceptionHandlerDictionary.TryGetValue(context.GetType(), out var exceptionHandler))
+                        exceptionStatus = exceptionHandler(e, context);
                     if (exceptionStatus == null)
                         //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
                         throw;
@@ -272,7 +280,9 @@ namespace GenericEventRunner.ForHandlers
                 }
                 catch (Exception e)
                 {
-                    var exceptionStatus = _config.SaveChangesExceptionHandler?.Invoke(e, context);
+                    IStatusGeneric exceptionStatus = null;
+                    if (_config.ExceptionHandlerDictionary.TryGetValue(context.GetType(), out var exceptionHandler))
+                        exceptionStatus = exceptionHandler(e, context);
                     if (exceptionStatus == null)
                         //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
                         throw;

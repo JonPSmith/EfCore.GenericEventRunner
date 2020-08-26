@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.EntityFrameworkCore;
 using StatusGeneric;
 
@@ -13,12 +14,6 @@ namespace GenericEventRunner.ForSetup
     /// </summary>
     public interface IGenericEventRunnerConfig
     {
-        /// <summary>
-        /// This holds the list of actions to be run after DetectChanges is called, but before SaveChanges is called
-        /// NOTE: The BeforeSaveEvents will be run before these actions
-        /// </summary>
-        public List<(Type dbContextType, Action<DbContext> action)> ActionsToRunAfterDetectChanges { get; }
-
         /// <summary>
         /// This limits the number of times it will look for new events from the BeforeSave events.
         /// This stops circular sets of events
@@ -60,12 +55,25 @@ namespace GenericEventRunner.ForSetup
             where TContext : DbContext;
 
         /// <summary>
+        /// This method allows you to register an exception handler for a specific DbContext type
         /// When SaveChangesWithValidation is called if there is an exception then this method is called (if present)
         /// a) If it returns null then the error is rethrown. This means the exception handler can't handle that exception.
         /// b) If it returns a status with errors then those are combined into the GenericEventRunner status.
         /// c) If it returns a valid status (i.e. no errors) then it calls SaveChanges again, still with exception capture.
         /// Item b) is useful for turning SQL errors into user-friendly error message, and c) is good for handling a DbUpdateConcurrencyException
         /// </summary>
-        Func<Exception, DbContext, IStatusGeneric> SaveChangesExceptionHandler { get; }
+        void RegisterSaveChangesExceptionHandler<TContext>(
+            Func<Exception, DbContext, IStatusGeneric> exceptionHandler) where TContext : DbContext;
+
+        /// <summary>
+        /// This holds the list of actions to be run after DetectChanges is called, but before SaveChanges is called
+        /// NOTE: The BeforeSaveEvents will be run before these actions
+        /// </summary>
+        public IReadOnlyList<(Type dbContextType, Action<DbContext> action)> ActionsToRunAfterDetectChanges { get; }
+
+        /// <summary>
+        /// This holds the Dictionary of exception handlers for a specific DbContext
+        /// </summary>
+        ImmutableDictionary<Type, Func<Exception, DbContext, IStatusGeneric>> ExceptionHandlerDictionary { get; }
     }
 }

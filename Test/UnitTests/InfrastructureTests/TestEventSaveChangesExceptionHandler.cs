@@ -63,10 +63,8 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var config = new GenericEventRunnerConfig
-            {
-                SaveChangesExceptionHandler = CatchAndFixConcurrencyException
-            };
+            var config = new GenericEventRunnerConfig();
+            config.RegisterSaveChangesExceptionHandler<ExampleDbContext>(CatchAndFixConcurrencyException);
             var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>( config: config);
             {
                 var stock = context.ProductStocks.OrderBy(x => x.NumInStock).First();
@@ -88,10 +86,8 @@ namespace Test.UnitTests.InfrastructureTests
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var config = new GenericEventRunnerConfig
-            {
-                SaveChangesExceptionHandler = CatchAndFixConcurrencyException
-            };
+            var config = new GenericEventRunnerConfig();
+            config.RegisterSaveChangesExceptionHandler<ExampleDbContext>(CatchAndFixConcurrencyException);
             var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(config: config);
             {
                 var stock = context.ProductStocks.OrderBy(x => x.NumInStock).First();

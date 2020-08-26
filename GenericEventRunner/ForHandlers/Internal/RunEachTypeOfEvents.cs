@@ -104,9 +104,9 @@ namespace GenericEventRunner.ForHandlers.Internal
                 //We need to do this to ensure another call to SaveChanges doesn't get the old events
                 context.ChangeTracker.Entries<IEntityWithBeforeSaveEvents>()
                     .ToList().ForEach(x => x.Entity.GetBeforeSaveEventsThenClear());
+                context.ClearDuringEvents();
                 context.ChangeTracker.Entries<IEntityWithAfterSaveEvents>()
                     .ToList().ForEach(x => x.Entity.GetAfterSaveEventsThenClear());
-
             }
 
             return status;
