@@ -45,8 +45,7 @@ namespace GenericEventRunner.ForHandlers.Internal
             //Find the events marked to run before SaveChanges
             _duringBeforeEvents = duringEvents
                 .Where(x => x.DomainEvent.GetType()
-                                .GetCustomAttribute<DuringSaveStageAttribute>()?.WhenToExecute ==
-                            DuringSaveStages.BeforeSaveChanges)
+                                .GetCustomAttribute<MakeDuringEventRunBeforeSaveChangesAttribute>() != null)
                 .ToList();
 
             duringEvents.RemoveAll(x => _duringBeforeEvents.Contains(x));
