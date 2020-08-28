@@ -12,7 +12,6 @@ using EntityClasses.DomainEvents;
 using EntityClasses.SupportClasses;
 using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForDbContext;
-using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Microsoft.EntityFrameworkCore;
@@ -80,6 +79,84 @@ namespace Test.UnitTests.InfrastructureTests
                 logs[3].Message.ShouldStartWith("Log from NewBookDuringEventHandlerAsync. Unique value =");
             }
         }
+
+        //---------------------------------------------------------------
+        //Test of exceptions/status with error
+
+        [Fact]
+        public async Task TestExceptionDuringPostSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                tax.AddEvent(new EventTestDuringExceptionHandler(), EventToSend.DuringSave);
+                var ex = await Assert.ThrowsAsync<ApplicationException>(async () => await context.SaveChangesAsync());
+
+                //VERIFY
+                ex.Message.ShouldEqual(nameof(DuringHandlerThrowsException));
+            }
+        }
+
+        [Fact]
+        public async Task TestExceptionDuringPreSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                tax.AddEvent(new EventTestDuringPreExceptionHandler(), EventToSend.DuringSave);
+                var ex = await Assert.ThrowsAsync<ApplicationException>(async () => await context.SaveChangesAsync());
+
+                //VERIFY
+                ex.Message.ShouldEqual(nameof(DuringHandlerThrowsException));
+            }
+        }
+
+        [Fact]
+        public async Task TestBadStatusDuringPostSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                tax.AddEvent(new EventTestDuringPreReturnError(), EventToSend.DuringSave);
+                var ex = await Assert.ThrowsAsync<GenericEventRunnerStatusException>(async () => await context.SaveChangesAsync());
+
+                //VERIFY
+                context.StatusFromLastSaveChanges.IsValid.ShouldBeFalse();
+            }
+        }
+
+        [Fact]
+        public async Task TestBadStatusDuringPreSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                tax.AddEvent(new EventTestDuringReturnError(), EventToSend.DuringSave);
+                var ex = await Assert.ThrowsAsync<GenericEventRunnerStatusException>(async () => await context.SaveChangesAsync());
+
+                //VERIFY
+                context.StatusFromLastSaveChanges.IsValid.ShouldBeFalse();
+            }
+        }
+
+        //--------------------------------------------------------------
+        //add own transaction
 
         [Fact]
         public async Task TestAddBookCausesDuringEventLogsInTransactionCommitOk()
