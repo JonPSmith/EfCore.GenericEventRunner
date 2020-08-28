@@ -111,8 +111,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 //ATTEMPT
                 var tax = context.TaxRates.First();
-                throw new NotImplementedException();
-                tax.AddEvent(new EventTestDuringExceptionHandler(), EventToSend.DuringSave);
+                tax.AddEvent(new EventTestDuringPreExceptionHandler(), EventToSend.DuringSave);
                 var ex = Assert.Throws<ApplicationException>(() => context.SaveChanges());
 
                 //VERIFY
@@ -130,8 +129,7 @@ namespace Test.UnitTests.InfrastructureTests
             {
                 //ATTEMPT
                 var tax = context.TaxRates.First();
-                throw new NotImplementedException();
-                tax.AddEvent(new EventTestDuringReturnError(), EventToSend.DuringSave);
+                tax.AddEvent(new EventTestDuringPreReturnError(), EventToSend.DuringSave);
                 var ex = Assert.Throws<GenericEventRunnerStatusException>(() => context.SaveChanges());
 
                 //VERIFY
