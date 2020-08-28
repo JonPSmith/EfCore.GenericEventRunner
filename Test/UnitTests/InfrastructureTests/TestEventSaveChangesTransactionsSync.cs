@@ -5,18 +5,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using DataLayer;
 using EntityClasses;
 using EntityClasses.DomainEvents;
 using EntityClasses.SupportClasses;
 using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForDbContext;
-using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Test.EfHelpers;
 using Test.EventsAndHandlers;
 using TestSupport.EfHelpers;
@@ -59,6 +56,7 @@ namespace Test.UnitTests.InfrastructureTests
             }
         }
 
+        //Tests before and after
         [Fact]
         public void TestAddBookCausesDuringEventLogsWithBeforeSave()
         {
@@ -81,6 +79,86 @@ namespace Test.UnitTests.InfrastructureTests
                 logs[3].Message.ShouldStartWith("Log from NewBookDuringEventHandler. Unique value =");
             }
         }
+
+        //---------------------------------------------------------------
+        //Test of exceptions/status with error
+
+        [Fact]
+        public void TestExceptionDuringPostSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                tax.AddEvent(new EventTestDuringExceptionHandler(), EventToSend.DuringSave);
+                var ex = Assert.Throws<ApplicationException>(() => context.SaveChanges());
+
+                //VERIFY
+                ex.Message.ShouldEqual(nameof(DuringHandlerThrowsException));
+            }
+        }
+
+        [Fact]
+        public void TestExceptionDuringPreSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                throw new NotImplementedException();
+                tax.AddEvent(new EventTestDuringExceptionHandler(), EventToSend.DuringSave);
+                var ex = Assert.Throws<ApplicationException>(() => context.SaveChanges());
+
+                //VERIFY
+                ex.Message.ShouldEqual(nameof(DuringHandlerThrowsException));
+            }
+        }
+
+        [Fact]
+        public void TestBadStatusDuringPostSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                throw new NotImplementedException();
+                tax.AddEvent(new EventTestDuringReturnError(), EventToSend.DuringSave);
+                var ex = Assert.Throws<GenericEventRunnerStatusException>(() => context.SaveChanges());
+
+                //VERIFY
+                context.StatusFromLastSaveChanges.IsValid.ShouldBeFalse();
+            }
+        }
+
+        [Fact]
+        public void TestBadStatusDuringPreSave()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                //ATTEMPT
+                var tax = context.TaxRates.First();
+                tax.AddEvent(new EventTestDuringReturnError(), EventToSend.DuringSave);
+                var ex = Assert.Throws<GenericEventRunnerStatusException>(() => context.SaveChanges());
+
+                //VERIFY
+                context.StatusFromLastSaveChanges.IsValid.ShouldBeFalse();
+            }
+        }
+
+        //--------------------------------------------------------------
+        //add own transaction
 
         [Fact]
         public void TestAddBookCausesDuringEventLogsInTransactionCommitOk()
@@ -157,6 +235,9 @@ namespace Test.UnitTests.InfrastructureTests
                 logs[1].Message.ShouldStartWith("Log from NewBookDuringEventHandler. Unique value = ");
             }
         }
+
+        //------------------------------------------------------------------
+        //test action after DetectChanged
 
         [Fact]
         public void TestAddBookNoActionToUpdateDates()
