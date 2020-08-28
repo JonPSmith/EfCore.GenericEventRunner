@@ -5,7 +5,7 @@ using GenericEventRunner.DomainParts;
 
 namespace EntityClasses.DomainEvents
 {
-    [DuringSaveStage(DuringSaveStages.BeforeSaveChanges)]
+    [MakeDuringEventRunBeforeSaveChanges()]
     public class NewBookEventButBeforeSave : IDomainEvent
     {
     }
