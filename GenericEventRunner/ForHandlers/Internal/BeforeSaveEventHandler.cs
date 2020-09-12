@@ -8,11 +8,11 @@ namespace GenericEventRunner.ForHandlers.Internal
 {
     internal abstract class BeforeSaveEventHandler
     {
-        public abstract IStatusGeneric Handle(object callingEntity, IDomainEvent domainEvent);
+        public abstract IStatusGeneric Handle(object callingEntity, IEntityEvent entityEvent);
     }
 
     internal class BeforeSaveHandler<T> : BeforeSaveEventHandler
-        where T : IDomainEvent
+        where T : IEntityEvent
     {
         private readonly IBeforeSaveEventHandler<T> _handler;
 
@@ -21,9 +21,9 @@ namespace GenericEventRunner.ForHandlers.Internal
             _handler = handler;
         }
 
-        public override IStatusGeneric Handle(object callingEntity, IDomainEvent domainEvent)
+        public override IStatusGeneric Handle(object callingEntity, IEntityEvent entityEvent)
         {
-            return _handler.Handle(callingEntity, (T)domainEvent);
+            return _handler.Handle(callingEntity, (T)entityEvent);
         }
     }
 }

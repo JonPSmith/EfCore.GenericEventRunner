@@ -25,12 +25,12 @@ namespace GenericEventRunner.ForHandlers
         /// </summary>
         /// <param name="message"></param>
         /// <param name="callingEntity"></param>
-        /// <param name="domainEvent"></param>
-        public GenericEventRunnerException(string message, object callingEntity, IDomainEvent domainEvent)
+        /// <param name="entityEvent"></param>
+        public GenericEventRunnerException(string message, object callingEntity, IEntityEvent entityEvent)
             : base(message)
         {
             Data.Add("CallingEntityType", callingEntity.GetType().FullName);
-            Data.Add("DomainEventType", domainEvent.GetType().FullName);
+            Data.Add("DomainEventType", entityEvent.GetType().FullName);
         }
     }
 }

@@ -8,11 +8,11 @@ namespace GenericEventRunner.ForHandlers.Internal
 {
     internal abstract class AfterSaveEventHandlerAsync
     {
-        public abstract Task HandleAsync(object callingEntity, IDomainEvent domainEvent);
+        public abstract Task HandleAsync(object callingEntity, IEntityEvent entityEvent);
     }
 
     internal class AfterSaveHandlerAsync<T> : AfterSaveEventHandlerAsync
-        where T : IDomainEvent
+        where T : IEntityEvent
     {
         private readonly IAfterSaveEventHandlerAsync<T> _handler;
 
@@ -21,9 +21,9 @@ namespace GenericEventRunner.ForHandlers.Internal
             _handler = handler;
         }
 
-        public override Task HandleAsync(object callingEntity, IDomainEvent domainEvent)
+        public override Task HandleAsync(object callingEntity, IEntityEvent entityEvent)
         {
-            return _handler.HandleAsync(callingEntity, (T)domainEvent);
+            return _handler.HandleAsync(callingEntity, (T)entityEvent);
         }
     }
 }

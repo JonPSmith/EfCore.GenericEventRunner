@@ -2,6 +2,7 @@
 
 ## 2.1.0
 
+- BREAKING CHANGE: IDomainEvent renamed to IEntityEvent
 - BREAKING CHANGE - the definitions of the events handler has changed. The callingEntity parameter is now an object. 
 - BREAKING CHANGE - You now need to register exception handlers against the DbContext type. This allows different handlers for multiple DbContexts
 - New Feature: Added during event and event handlers. The event is called within a transaction.

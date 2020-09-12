@@ -13,6 +13,6 @@ namespace GenericEventRunner.DomainParts
         /// <summary>
         /// This gets all the events in the BeforeSaveEvents list, and clears that list at the same time
         /// </summary>
-        ICollection<IDomainEvent> GetBeforeSaveEventsThenClear();
+        ICollection<IEntityEvent> GetBeforeSaveEventsThenClear();
     }
 }

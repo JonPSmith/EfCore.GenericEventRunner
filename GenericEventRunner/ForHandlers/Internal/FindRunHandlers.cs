@@ -56,9 +56,9 @@ namespace GenericEventRunner.ForHandlers.Internal
                 {
                     var handlerStatus = handlerWrapper.IsAsync
                         ? await ((BeforeSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent).ConfigureAwait(false)
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.EntityEvent).ConfigureAwait(false)
                         : ((BeforeSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                            .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                            .Handle(entityAndEvent.CallingEntity, entityAndEvent.EntityEvent);
                     if (handlerStatus != null)
                         status.CombineStatuses(handlerStatus);
                 }
@@ -67,11 +67,11 @@ namespace GenericEventRunner.ForHandlers.Internal
                     if (handlerWrapper.IsAsync)
                         await ((AfterSaveEventHandlerAsync) Activator.CreateInstance(handlerWrapper.WrapperType,
                                 handlerWrapper.EventHandler))
-                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent).ConfigureAwait(false);
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.EntityEvent).ConfigureAwait(false);
                     else
                         ((AfterSaveEventHandler) Activator.CreateInstance(handlerWrapper.WrapperType,
                                 handlerWrapper.EventHandler))
-                            .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                            .Handle(entityAndEvent.CallingEntity, entityAndEvent.EntityEvent);
                 }
                 else
                 {
@@ -79,10 +79,10 @@ namespace GenericEventRunner.ForHandlers.Internal
 
                     var handlerStatus = handlerWrapper.IsAsync
                         ? await ((DuringSaveEventHandlerAsync)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent, _uniqueValue)
+                            .HandleAsync(entityAndEvent.CallingEntity, entityAndEvent.EntityEvent, _uniqueValue)
                             .ConfigureAwait(false)
                         : ((DuringSaveEventHandler)Activator.CreateInstance(handlerWrapper.WrapperType, handlerWrapper.EventHandler))
-                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.DomainEvent, _uniqueValue);
+                        .Handle(entityAndEvent.CallingEntity, entityAndEvent.EntityEvent, _uniqueValue);
                     if (handlerStatus != null)
                         status.CombineStatuses(handlerStatus);
                 }

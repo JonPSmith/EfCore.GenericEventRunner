@@ -5,7 +5,7 @@ using GenericEventRunner.DomainParts;
 
 namespace Test.EventsAndHandlers
 {
-    public class EventWithNoHandler : IDomainEvent
+    public class EventWithNoHandler : IEntityEvent
     {
         
     }

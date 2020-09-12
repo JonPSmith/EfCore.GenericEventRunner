@@ -6,5 +6,5 @@ namespace GenericEventRunner.DomainParts
     /// <summary>
     /// This is an empty interface that domain events should inherit
     /// </summary>
-    public interface IDomainEvent { }
+    public interface IEntityEvent { }
 }

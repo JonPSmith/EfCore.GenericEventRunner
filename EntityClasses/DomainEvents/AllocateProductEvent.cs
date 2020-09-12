@@ -6,7 +6,7 @@ using GenericEventRunner.DomainParts;
 
 namespace EntityClasses.DomainEvents
 {
-    public class AllocateProductEvent : IDomainEvent
+    public class AllocateProductEvent : IEntityEvent
     {
         public AllocateProductEvent(string productName, int numOrdered)
         {

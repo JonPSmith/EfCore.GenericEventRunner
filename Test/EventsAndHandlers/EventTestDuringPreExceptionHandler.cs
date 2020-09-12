@@ -6,7 +6,7 @@ using GenericEventRunner.DomainParts;
 namespace Test.EventsAndHandlers
 {
     [MakeDuringEventRunBeforeSaveChanges()]
-    public class EventTestDuringPreExceptionHandler : IDomainEvent
+    public class EventTestDuringPreExceptionHandler : IEntityEvent
     {
         
     }

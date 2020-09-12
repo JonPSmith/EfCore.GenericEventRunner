@@ -44,7 +44,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 
             //Find the events marked to run before SaveChanges
             _duringBeforeEvents = duringEvents
-                .Where(x => x.DomainEvent.GetType()
+                .Where(x => x.EntityEvent.GetType()
                                 .GetCustomAttribute<MakeDuringEventRunBeforeSaveChangesAttribute>() != null)
                 .ToList();
 
@@ -94,7 +94,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                         $"The BeforeSave event loop exceeded the config's {nameof(GenericEventRunnerConfig.MaxTimesToLookForBeforeEvents)}" +
                         $" value of {_config.MaxTimesToLookForBeforeEvents}. This implies a circular sets of events. " +
                         "Look at EventsRunner Information logs for more information on what event handlers were running.",
-                        eventsToRun.Last().CallingEntity, eventsToRun.Last().DomainEvent);
+                        eventsToRun.Last().CallingEntity, eventsToRun.Last().EntityEvent);
             } while (shouldRunAgain && (status.IsValid || !_config.StopOnFirstBeforeHandlerThatHasAnError));
 
             if (!status.IsValid)

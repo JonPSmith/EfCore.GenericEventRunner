@@ -24,7 +24,7 @@ namespace GenericEventRunner.ForHandlers.Internal
 
         public List<HandlerAndWrapper> GetHandlers(EntityAndEvent entityAndEvent, BeforeDuringOrAfter beforeDuringOrAfter, bool lookForAsyncHandlers)
         {
-            var eventType = entityAndEvent.DomainEvent.GetType();
+            var eventType = entityAndEvent.EntityEvent.GetType();
             var asyncHandlers = new List<object>();
 
             List<object> GetAsyncHandlers()
@@ -57,7 +57,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                 _logger.LogError($"Missing handler for event of type {eventType.FullName} for {beforeDuringOrAfter} event handler.{suffix}");
                 throw new GenericEventRunnerException(
                     $"Could not find a {beforeDuringOrAfter} event handler for the event {eventType.Name}.{suffix}",
-                    entityAndEvent.CallingEntity, entityAndEvent.DomainEvent);
+                    entityAndEvent.CallingEntity, entityAndEvent.EntityEvent);
             }
 
             return result;

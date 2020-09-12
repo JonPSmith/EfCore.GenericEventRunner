@@ -11,7 +11,7 @@ namespace GenericEventRunner.ForHandlers
     /// Place this on any event handler that should be called within a transaction containing a call to SaveChanges
     /// </summary>
     /// <typeparam name="T">This should be the domain event that this handler is looking for</typeparam>
-    public interface IDuringSaveEventHandler<in T> where T : IDomainEvent
+    public interface IDuringSaveEventHandler<in T> where T : IEntityEvent
     {
         /// <summary>
         /// This is the method you must define to produce a AfterSave event handler 

@@ -5,7 +5,7 @@ using GenericEventRunner.DomainParts;
 
 namespace Test.EventsAndHandlers
 {
-    public class EventTestDuringPreReturnError : IDomainEvent
+    public class EventTestDuringPreReturnError : IEntityEvent
     {
         
     }

@@ -15,20 +15,20 @@ namespace GenericEventRunner.DomainParts
         //Events are created within a single DBContext and are cleared every time SaveChanges/SaveChangesAsync is called
         
         //This holds events that are run before SaveChanges is called
-        private readonly List<IDomainEvent> _beforeSaveEvents = new List<IDomainEvent>();
+        private readonly List<IEntityEvent> _beforeSaveEvents = new List<IEntityEvent>();
 
         //This holds events that are run within a transaction containing a call to SaveChanges 
-        private readonly List<IDomainEvent> _duringSaveEvents = new List<IDomainEvent>();
+        private readonly List<IEntityEvent> _duringSaveEvents = new List<IEntityEvent>();
 
         //This holds events that are run after SaveChanges finishes successfully
-        private readonly List<IDomainEvent> _afterSaveChangesEvents  = new List<IDomainEvent>();
+        private readonly List<IEntityEvent> _afterSaveChangesEvents  = new List<IEntityEvent>();
 
         /// <summary>
         /// This allows an entity to add an event to this class
         /// </summary>
         /// <param name="dEvent">This is the domain event you want to sent</param>
         /// <param name="eventToSend">This allows you to send the event to either BeforeSave, DuringSave or AfterSave. Default is BeforeSave List</param>
-        public void AddEvent(IDomainEvent dEvent, EventToSend eventToSend = EventToSend.BeforeSave)
+        public void AddEvent(IEntityEvent dEvent, EventToSend eventToSend = EventToSend.BeforeSave)
         {
             if (eventToSend == EventToSend.DuringSave)
                 _duringSaveEvents.Add(dEvent);
@@ -41,7 +41,7 @@ namespace GenericEventRunner.DomainParts
         /// <summary>
         /// This gets all the events in the BeforeSaveEvents list, and clears that list at the same time
         /// </summary>
-        public ICollection<IDomainEvent> GetBeforeSaveEventsThenClear()
+        public ICollection<IEntityEvent> GetBeforeSaveEventsThenClear()
         {
             var eventCopy = _beforeSaveEvents.ToList();
             _beforeSaveEvents.Clear();
@@ -51,7 +51,7 @@ namespace GenericEventRunner.DomainParts
         /// <summary>
         /// This returns the events that should be run within a transaction containing a call to SaveChanges
         /// </summary>
-        public ICollection<IDomainEvent> GetDuringSaveEvents()
+        public ICollection<IEntityEvent> GetDuringSaveEvents()
         {
             return _duringSaveEvents;
         }
@@ -67,7 +67,7 @@ namespace GenericEventRunner.DomainParts
         /// <summary>
         /// This gets all the events in the AfterSaveEvents list, and clears that list at the same time
         /// </summary>
-        public ICollection<IDomainEvent> GetAfterSaveEventsThenClear()
+        public ICollection<IEntityEvent> GetAfterSaveEventsThenClear()
         {
             var eventCopy = _afterSaveChangesEvents.ToList();
             _afterSaveChangesEvents.Clear();

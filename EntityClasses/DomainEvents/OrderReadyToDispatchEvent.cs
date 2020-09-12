@@ -6,7 +6,7 @@ using GenericEventRunner.DomainParts;
 
 namespace EntityClasses.DomainEvents
 {
-    public class OrderReadyToDispatchEvent : IDomainEvent
+    public class OrderReadyToDispatchEvent : IEntityEvent
     {
         public OrderReadyToDispatchEvent(DateTime actualDispatchDate, Action<decimal> setTaxRatePercent)
         {

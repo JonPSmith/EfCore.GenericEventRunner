@@ -7,13 +7,13 @@ namespace GenericEventRunner.ForHandlers.Internal
 {
     internal class EntityAndEvent
     {
-        public EntityAndEvent(object callingEntity, IDomainEvent domainEvent)
+        public EntityAndEvent(object callingEntity, IEntityEvent entityEvent)
         {
             CallingEntity = callingEntity;
-            DomainEvent = domainEvent;
+            EntityEvent = entityEvent;
         }
 
         public object CallingEntity { get; }
-        public IDomainEvent DomainEvent { get; }
+        public IEntityEvent EntityEvent { get; }
     }
 }

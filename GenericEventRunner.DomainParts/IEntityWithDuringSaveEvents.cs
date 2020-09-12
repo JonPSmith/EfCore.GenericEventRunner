@@ -13,7 +13,7 @@ namespace GenericEventRunner.DomainParts
         /// <summary>
         /// This returns the events that should be run within a transaction containing a call to SaveChanges
         /// </summary>
-        ICollection<IDomainEvent> GetDuringSaveEvents();
+        ICollection<IEntityEvent> GetDuringSaveEvents();
 
         /// <summary>
         /// This clears all the during save events once the code within the transaction has finished

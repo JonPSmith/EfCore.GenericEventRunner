@@ -6,7 +6,7 @@ using GenericEventRunner.DomainParts;
 
 namespace EntityClasses.DomainEvents
 {
-    public class TaxRateChangedEvent : IDomainEvent
+    public class TaxRateChangedEvent : IEntityEvent
     {
         public TaxRateChangedEvent(decimal newTaxRate, Action refreshGrandTotalPrice)
         {

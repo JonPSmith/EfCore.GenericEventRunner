@@ -5,7 +5,7 @@ using GenericEventRunner.DomainParts;
 
 namespace EntityClasses.DomainEvents
 {
-    public class NewBookEvent : IDomainEvent
+    public class NewBookEvent : IEntityEvent
     {
     }
 }

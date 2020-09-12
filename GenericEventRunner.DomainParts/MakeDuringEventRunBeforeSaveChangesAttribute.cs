@@ -6,7 +6,7 @@ using System;
 namespace GenericEventRunner.DomainParts
 {
     /// <summary>
-    /// Add this attribute to a During <see cref="IDomainEvent"/> to make the event handler run before SaveChanges
+    /// Add this attribute to a During <see cref="IEntityEvent"/> to make the event handler run before SaveChanges
     /// </summary>
     public class MakeDuringEventRunBeforeSaveChangesAttribute : Attribute
     {
