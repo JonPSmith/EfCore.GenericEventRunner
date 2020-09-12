@@ -17,6 +17,20 @@ namespace Test.UnitTests.InfrastructureTests
     {
 
         [Fact]
+        public void TestRegisterTwiceBad()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+
+            //ATTEMPT
+            services.AddTransient<TestRegisterDomainEvents>();
+            services.AddTransient<TestRegisterDomainEvents>();
+
+            //VERIFY
+            services.Count.ShouldEqual(2);
+        }
+
+        [Fact]
         public void TestRegisterEventHandlers()
         {
             //SETUP
@@ -128,7 +142,7 @@ namespace Test.UnitTests.InfrastructureTests
                     Assembly.GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute))));
 
             //VERIFY
-            ex.Message.ShouldEqual("You can only call this method once to register the GenericEventRunner.");
+            ex.Message.ShouldEqual("You can only call this method once to register the GenericEventRunner and event handlers.");
         }
     }
 }

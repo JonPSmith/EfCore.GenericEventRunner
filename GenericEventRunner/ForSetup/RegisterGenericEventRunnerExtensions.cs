@@ -95,7 +95,7 @@ namespace GenericEventRunner.ForSetup
 
             if (services.Contains(new ServiceDescriptor(typeof(IEventsRunner), typeof(EventsRunner), ServiceLifetime.Scoped),
                 new ServiceDescriptorCompare()))
-                throw new InvalidOperationException("You can only call this method once to register the GenericEventRunner.");
+                throw new InvalidOperationException("You can only call this method once to register the GenericEventRunner and event handlers.");
             services.AddSingleton<IGenericEventRunnerConfig>(config);
             services.AddScoped<IEventsRunner, EventsRunner>();
         }
