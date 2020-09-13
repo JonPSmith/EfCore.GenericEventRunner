@@ -93,11 +93,11 @@ namespace GenericEventRunner.ForSetup
                     services.AddSingleton(interfaceType, implementationType);
             }
 
-            if (services.Contains(new ServiceDescriptor(typeof(IEventsRunner), typeof(EventsRunner), ServiceLifetime.Scoped),
+            if (services.Contains(new ServiceDescriptor(typeof(IEventsRunner), typeof(EventsRunner), ServiceLifetime.Transient),
                 new ServiceDescriptorCompare()))
                 throw new InvalidOperationException("You can only call this method once to register the GenericEventRunner and event handlers.");
             services.AddSingleton<IGenericEventRunnerConfig>(config);
-            services.AddScoped<IEventsRunner, EventsRunner>();
+            services.AddTransient<IEventsRunner, EventsRunner>();
         }
 
         private static IEnumerable<(Type classType, Type interfaceType)> ClassesWithGivenEventHandlerType(Type interfaceToLookFor, Assembly assembly)

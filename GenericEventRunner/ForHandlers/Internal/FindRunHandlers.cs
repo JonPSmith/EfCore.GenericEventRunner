@@ -21,8 +21,6 @@ namespace GenericEventRunner.ForHandlers.Internal
         //This is used by During events to handle retry of a transaction
         private readonly Guid _uniqueValue = Guid.NewGuid();
 
-
-
         public FindRunHandlers(IServiceProvider serviceProvider, ILogger logger, IGenericEventRunnerConfig config)
         {
             _serviceProvider = serviceProvider;
