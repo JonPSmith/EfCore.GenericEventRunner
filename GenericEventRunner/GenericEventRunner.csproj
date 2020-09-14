@@ -5,14 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EfCore.GenericEventRunner.DomainParts" Version="2.1.0-preview006" />
+    <PackageReference Include="EfCore.GenericEventRunner.DomainParts" Version="2.1.0" />
     <PackageReference Include="GenericServices.StatusGeneric" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.1.0-preview007</PackageVersion>
+    <PackageVersion>2.1.0</PackageVersion>
     <Version>2.1.0</Version>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
     <FileVersion>2.1.0.0</FileVersion>
