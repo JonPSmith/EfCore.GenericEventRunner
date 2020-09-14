@@ -50,7 +50,7 @@ namespace GenericEventRunner.ForDbContext
             if (_eventsRunner == null)
                 throw new GenericEventRunnerException($"The {nameof(SaveChangesWithStatus)} cannot be used unless the event runner is present");
 
-            StatusFromLastSaveChanges = _eventsRunner.RunEventsBeforeAfterSaveChanges(this,
+            StatusFromLastSaveChanges = _eventsRunner.RunEventsBeforeDuringAfterSaveChanges(this,
                 () => base.SaveChanges(acceptAllChangesOnSuccess));
             
             return StatusFromLastSaveChanges;
@@ -68,7 +68,7 @@ namespace GenericEventRunner.ForDbContext
             if (_eventsRunner == null)
                 throw new GenericEventRunnerException($"The {nameof(SaveChangesWithStatusAsync)} cannot be used unless the event runner is present");
 
-            StatusFromLastSaveChanges = await _eventsRunner.RunEventsBeforeAfterSaveChangesAsync(this,
+            StatusFromLastSaveChanges = await _eventsRunner.RunEventsBeforeDuringAfterSaveChangesAsync(this,
                 () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), cancellationToken).ConfigureAwait(false);
 
             return StatusFromLastSaveChanges;

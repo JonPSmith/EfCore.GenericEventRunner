@@ -2,7 +2,6 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +9,6 @@ using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers.Internal;
 using GenericEventRunner.ForSetup;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using StatusGeneric;
 
@@ -38,12 +36,12 @@ namespace GenericEventRunner.ForHandlers
         }
 
         /// <summary>
-        /// This runs the events before and after the base SaveChanges method is run
+        /// This runs the events before, during, and after the base SaveChanges method is run
         /// </summary>
         /// <param name="context">The current DbContext</param>
         /// <param name="callBaseSaveChanges">A function that is linked to the base SaveChanges in your DbContext</param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context, Func<int> callBaseSaveChanges)
+        public IStatusGeneric<int> RunEventsBeforeDuringAfterSaveChanges(DbContext context, Func<int> callBaseSaveChanges)
         {
             IStatusGeneric<int> RunTransactionWithDuringSaveChangesEvents()
             {
@@ -124,13 +122,13 @@ namespace GenericEventRunner.ForHandlers
         }
 
         /// <summary>
-        /// This runs the events before and after the base SaveChangesAsync method is run
+        /// This runs the events before, during and after the base SaveChangesAsync method is run
         /// </summary>
         /// <param name="context">The current DbContext</param>
         /// <param name="callBaseSaveChangesAsync">A function that is linked to the base SaveChangesAsync in your DbContext</param>
         /// <param name="cancellationToken"></param>
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
-        public async Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context,
+        public async Task<IStatusGeneric<int>> RunEventsBeforeDuringAfterSaveChangesAsync(DbContext context,
             Func<Task<int>> callBaseSaveChangesAsync, CancellationToken cancellationToken)
         {
 

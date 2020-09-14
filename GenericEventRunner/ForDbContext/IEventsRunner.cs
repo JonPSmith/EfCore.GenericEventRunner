@@ -23,7 +23,7 @@ namespace GenericEventRunner.ForDbContext
         /// <param name="context"></param>
         /// <param name="callBaseSaveChanges">This calls the base SaveChanges.</param>
         /// <returns></returns>
-        IStatusGeneric<int> RunEventsBeforeAfterSaveChanges(DbContext context,
+        IStatusGeneric<int> RunEventsBeforeDuringAfterSaveChanges(DbContext context,
             Func<int> callBaseSaveChanges);
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace GenericEventRunner.ForDbContext
         /// <param name="callBaseSaveChangesAsync">This calls the base SaveChangesAsync.</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<IStatusGeneric<int>> RunEventsBeforeAfterSaveChangesAsync(DbContext context,
+        Task<IStatusGeneric<int>> RunEventsBeforeDuringAfterSaveChangesAsync(DbContext context,
             Func<Task<int>> callBaseSaveChangesAsync, CancellationToken cancellationToken);
     }
 }
