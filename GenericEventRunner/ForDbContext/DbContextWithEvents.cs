@@ -29,6 +29,15 @@ namespace GenericEventRunner.ForDbContext
         /// </summary>
         public IStatusGeneric<int> StatusFromLastSaveChanges { get; private set; } 
 
+        /// <summary>
+        /// This sets up the DbContext options and adds the eventRunner
+        /// </summary>
+        /// <param name="options">normal EF Core options for a database</param>
+        /// <param name="eventsRunner">The Generic Event Runner - can be null which will turn off domain event handling</param>
+        protected DbContextWithEvents(DbContextOptions options, IEventsRunner eventsRunner) : base(options)
+        {
+            _eventsRunner = eventsRunner;
+        }
 
         /// <summary>
         /// This sets up the DbContext options and adds the eventRunner
