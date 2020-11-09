@@ -20,7 +20,8 @@ namespace GenericEventRunner.ForHandlers
     /// </summary>
     public class EventsRunner : IEventsRunner
     {
-        private readonly RunEachTypeOfEvents _eachEventRunner;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<EventsRunner> _logger;
         private readonly IGenericEventRunnerConfig _config;
 
         /// <summary>
@@ -31,8 +32,10 @@ namespace GenericEventRunner.ForHandlers
         /// <param name="config"></param>
         public EventsRunner(IServiceProvider serviceProvider, ILogger<EventsRunner> logger, IGenericEventRunnerConfig config)
         {
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _config = config ?? throw new ArgumentNullException(nameof(config));
-            _eachEventRunner = new RunEachTypeOfEvents(serviceProvider, logger, _config);
+            
         }
 
         /// <summary>
@@ -43,6 +46,8 @@ namespace GenericEventRunner.ForHandlers
         /// <returns>Returns the status with the numUpdated number from SaveChanges</returns>
         public IStatusGeneric<int> RunEventsBeforeDuringAfterSaveChanges(DbContext context, Func<int> callBaseSaveChanges)
         {
+            var eachEventRunner = new RunEachTypeOfEvents(_serviceProvider, _logger, _config);
+
             IStatusGeneric<int> RunTransactionWithDuringSaveChangesEvents()
             {
                 var localStatus = new StatusGenericHandler<int>();
@@ -50,7 +55,7 @@ namespace GenericEventRunner.ForHandlers
                 using var transaction = context.Database.CurrentTransaction == null 
                     ? context.Database.BeginTransaction()
                     : null;
-                var duringPreValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(context, false, false);
+                var duringPreValueTask = eachEventRunner.RunDuringSaveChangesEventsAsync(context, false, false);
                 if (!duringPreValueTask.IsCompleted)
                     throw new InvalidOperationException("Can only run sync tasks");
                 localStatus.CombineStatuses(duringPreValueTask.Result);
@@ -61,7 +66,7 @@ namespace GenericEventRunner.ForHandlers
 
                 localStatus.SetResult(transactionSaveChanges.Result);
 
-                var duringPostValueTask = _eachEventRunner.RunDuringSaveChangesEventsAsync(context, true,false);
+                var duringPostValueTask = eachEventRunner.RunDuringSaveChangesEventsAsync(context, true,false);
                 if (!duringPostValueTask.IsCompleted)
                     throw new InvalidOperationException("Can only run sync tasks");
                 if (localStatus.CombineStatuses(duringPostValueTask.Result).HasErrors)
@@ -73,9 +78,9 @@ namespace GenericEventRunner.ForHandlers
             }
 
             var status = new StatusGenericHandler<int>();
-            var hasDuringEvents = _eachEventRunner.SetupDuringEvents(context);
+            var hasDuringEvents = !_config.NotUsingDuringSaveHandlers && eachEventRunner.SetupDuringEvents(context);
 
-            var beforeValueTask = _eachEventRunner.RunBeforeSaveChangesEventsAsync(context, false);
+            var beforeValueTask = eachEventRunner.RunBeforeSaveChangesEventsAsync(context, false);
             if (!beforeValueTask.IsCompleted)
                 throw new InvalidOperationException("Can only run sync tasks");
             status.CombineStatuses(beforeValueTask.Result);
@@ -112,7 +117,7 @@ namespace GenericEventRunner.ForHandlers
             //Copy over the saveChanges result
             status.SetResult(callSaveChangesStatus.Result);
 
-            var afterValueTask = _eachEventRunner.RunAfterSaveChangesEventsAsync(context, false);
+            var afterValueTask = eachEventRunner.RunAfterSaveChangesEventsAsync(context, false);
             if (!afterValueTask.IsCompleted && !afterValueTask.IsFaulted)
                 throw new InvalidOperationException("Can only run sync tasks");
             if (afterValueTask.IsFaulted)
@@ -131,6 +136,7 @@ namespace GenericEventRunner.ForHandlers
         public async Task<IStatusGeneric<int>> RunEventsBeforeDuringAfterSaveChangesAsync(DbContext context,
             Func<Task<int>> callBaseSaveChangesAsync, CancellationToken cancellationToken)
         {
+            var eachEventRunner = new RunEachTypeOfEvents(_serviceProvider, _logger, _config);
 
             async Task<IStatusGeneric<int>> RunTransactionWithDuringSaveChangesEventsAsync()
             {
@@ -139,7 +145,7 @@ namespace GenericEventRunner.ForHandlers
                 using var transaction = context.Database.CurrentTransaction == null
                     ? await context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
                     : null;
-                var duringPreStatus = await _eachEventRunner.RunDuringSaveChangesEventsAsync(context, false, true)
+                var duringPreStatus = await eachEventRunner.RunDuringSaveChangesEventsAsync(context, false, true)
                     .ConfigureAwait(false);
                 localStatus.CombineStatuses(duringPreStatus);
 
@@ -150,7 +156,7 @@ namespace GenericEventRunner.ForHandlers
 
                 localStatus.SetResult(transactionSaveChanges.Result);
 
-                var duringPostStatus = await _eachEventRunner.RunDuringSaveChangesEventsAsync(context, true, true)
+                var duringPostStatus = await eachEventRunner.RunDuringSaveChangesEventsAsync(context, true, true)
                     .ConfigureAwait(false);
                 if (localStatus.CombineStatuses(duringPostStatus).HasErrors)
                     return localStatus;
@@ -162,9 +168,9 @@ namespace GenericEventRunner.ForHandlers
             }
 
             var status = new StatusGenericHandler<int>();
-            var hasDuringEvents = _eachEventRunner.SetupDuringEvents(context);
+            var hasDuringEvents = eachEventRunner.SetupDuringEvents(context);
             
-            status.CombineStatuses(await _eachEventRunner.RunBeforeSaveChangesEventsAsync(context, true).ConfigureAwait(false));
+            status.CombineStatuses(await eachEventRunner.RunBeforeSaveChangesEventsAsync(context, true).ConfigureAwait(false));
             if (!status.IsValid)
                 return status;
 
@@ -216,7 +222,7 @@ namespace GenericEventRunner.ForHandlers
                 }
                 //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
             } while (status.IsValid);
-            await _eachEventRunner.RunAfterSaveChangesEventsAsync(context, true).ConfigureAwait(false);
+            await eachEventRunner.RunAfterSaveChangesEventsAsync(context, true).ConfigureAwait(false);
             return status;
         }
 

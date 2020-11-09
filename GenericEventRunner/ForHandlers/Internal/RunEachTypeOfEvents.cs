@@ -114,6 +114,11 @@ namespace GenericEventRunner.ForHandlers.Internal
         public async ValueTask<IStatusGeneric> RunDuringSaveChangesEventsAsync(DbContext context, bool postSaveChanges, bool allowAsync)
         {
             var status = new StatusGenericHandler();
+
+            if (_config.NotUsingDuringSaveHandlers)
+                //Skip this stage if NotUsingDuringSaveHandlers is true
+                return status;
+
             var eventType = postSaveChanges
                 ? BeforeDuringOrAfter.DuringSave
                 : BeforeDuringOrAfter.DuringBeforeSave;
@@ -135,7 +140,6 @@ namespace GenericEventRunner.ForHandlers.Internal
 
             return status;
         }
-
 
         //NOTE: This had problems throwing an exception (don't know why - RunBeforeSaveChangesEventsAsync work!?).
         //Having it return an exception fixed it

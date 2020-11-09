@@ -2,9 +2,7 @@
 
 This library allows users of Entity Framework Core (EF Core) to add events to their entity classes, i.e. the classes that EF Core maps to a database. It is useful if you have business rules that are triggered by a property changing, or an event such as receiving an customer order and you need to check some things before you can accept it. 
 
-**V2.1.0 has a number of new features.** See [ReleaseNotes](https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/ReleaseNotes.md) for more information. 
-
-This is an open source project (MIT license) available [on GitHub](https://github.com/JonPSmith/EfCore.GenericEventRunner) and as a [NuGet package](https://www.nuget.org/packages/EfCore.GenericEventRunner/). 
+This is an open source project (MIT license) available [on GitHub](https://github.com/JonPSmith/EfCore.GenericEventRunner) and as a [NuGet package](https://www.nuget.org/packages/EfCore.GenericEventRunner/). See [ReleaseNotes](https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/ReleaseNotes.md) for more information. 
 
 Documentation and links to articles can be found via the [Documentation link](https://github.com/JonPSmith/EfCore.GenericEventRunner/wiki).
 

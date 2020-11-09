@@ -3,7 +3,10 @@
 
 ## 2.2.0 
 
-- BREAKING CHAGE - New feature to check that there is a handler for each event. Consider Async/Sync problem.
+- Feature: GenericEventRunner is guaranteed to work with DbContext pooling - issue #3 (see note in Release Notes).
+- Minor change: If configration `NotUsingDuringSaveHandlers` is true, then it supressess the running of the DuringEvents part.
+
+NOTE: The EventRunner creates new instances of all the code every time it is called. This stops any potential issues when using DbContext pooling. PS. It most likely would have worked but this makes sure it does.
 
 ## 2.1.0
 
