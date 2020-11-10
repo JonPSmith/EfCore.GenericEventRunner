@@ -2,12 +2,9 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using GenericEventRunner.DomainParts;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using StatusGeneric;
 
 namespace GenericEventRunner.ForDbContext

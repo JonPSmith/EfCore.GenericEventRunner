@@ -78,7 +78,6 @@ namespace GenericEventRunner.ForHandlers
             }
 
             var status = new StatusGenericHandler<int>();
-            var hasDuringEvents = !_config.NotUsingDuringSaveHandlers && eachEventRunner.SetupDuringEvents(context);
 
             var beforeValueTask = eachEventRunner.RunBeforeSaveChangesEventsAsync(context, false);
             if (!beforeValueTask.IsCompleted)
@@ -87,6 +86,7 @@ namespace GenericEventRunner.ForHandlers
             if (!status.IsValid) 
                 return status;
 
+            var hasDuringEvents = !_config.NotUsingDuringSaveHandlers && eachEventRunner.SetupDuringEvents(context);
             context.ChangeTracker.DetectChanges();
 
             //This runs any actions adding to the config that match this DbContext type
@@ -168,12 +168,12 @@ namespace GenericEventRunner.ForHandlers
             }
 
             var status = new StatusGenericHandler<int>();
-            var hasDuringEvents = eachEventRunner.SetupDuringEvents(context);
             
             status.CombineStatuses(await eachEventRunner.RunBeforeSaveChangesEventsAsync(context, true).ConfigureAwait(false));
             if (!status.IsValid)
                 return status;
 
+            var hasDuringEvents = !_config.NotUsingDuringSaveHandlers && eachEventRunner.SetupDuringEvents(context);
             context.ChangeTracker.DetectChanges();
 
             //This runs any actions adding to the config that match this DbContext type

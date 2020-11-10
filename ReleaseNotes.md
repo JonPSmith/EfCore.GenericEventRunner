@@ -1,6 +1,10 @@
 # Release notes
 
 
+## 2.2.2
+
+- Feature/bug fix: Before events can now create During events that will be found and run. 
+
 ## 2.2.1
 
 - Bug Fix: If scans multple assemblies it double registered some event handlers
