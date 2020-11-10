@@ -51,8 +51,9 @@ namespace Test.UnitTests.InfrastructureTests
         public void TestOrderCreatedHandler()
         {
             //SETUP
+            var logs = new List<LogOutput>();
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
             {
                 var itemDto = new BasketItemDto
                 {
@@ -71,6 +72,11 @@ namespace Test.UnitTests.InfrastructureTests
                 order.TaxRatePercent.ShouldEqual(4);
                 order.GrandTotalPrice.ShouldEqual(order.TotalPriceNoTax * (1 + order.TaxRatePercent / 100));
                 context.ProductStocks.OrderBy(x => x.NumInStock).First().NumAllocated.ShouldEqual(2);
+
+                logs.Count.ShouldEqual(3);
+                logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderCreatedHandler.");
+                logs[1].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.AllocateProductHandler.");
+                logs[2].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
             }
         }
 

@@ -1,6 +1,10 @@
 # Release notes
 
 
+## ToDo
+- Check if a event handler is already registered. If so don't register it again and output warning in the `RegisterGenericEventRunner` debugLogs.
+- Dedup events in each run - this stops something being triggering twice. (add warning log if happens).
+
 ## 2.2.2
 
 - Feature/bug fix: Before events can now create During events that will be found and run. 
