@@ -36,7 +36,8 @@ namespace GenericEventRunner.ForHandlers.Internal
             foreach (var entityEntry in context.ChangeTracker.Entries<IEntityWithDuringSaveEvents>())
             {
                 duringEvents.AddRange(entityEntry.Entity.GetDuringSaveEvents()
-                    .Select(x => new EntityAndEvent(entityEntry.Entity, x)));
+                    .Select(x => new EntityAndEvent(entityEntry.Entity, x))
+                    .Distinct());
             }
 
             if (!duringEvents.Any())
@@ -67,7 +68,8 @@ namespace GenericEventRunner.ForHandlers.Internal
                 foreach (var entityEntry in context.ChangeTracker.Entries<IEntityWithBeforeSaveEvents>())
                 {
                     eventsToRun.AddRange(entityEntry.Entity.GetBeforeSaveEventsThenClear()
-                        .Select(x => new EntityAndEvent(entityEntry.Entity, x)));
+                        .Select(x => new EntityAndEvent(entityEntry.Entity, x))
+                        .Distinct());
                 }
 
                 shouldRunAgain = false;
@@ -155,7 +157,8 @@ namespace GenericEventRunner.ForHandlers.Internal
             foreach (var entityEntry in context.ChangeTracker.Entries<IEntityWithAfterSaveEvents>())
             {
                 eventsToRun.AddRange(entityEntry.Entity.GetAfterSaveEventsThenClear()
-                    .Select(x => new EntityAndEvent(entityEntry.Entity, x)));
+                    .Select(x => new EntityAndEvent(entityEntry.Entity, x))
+                    .Distinct());
             }
 
             foreach (var entityAndEvent in eventsToRun)
@@ -175,7 +178,5 @@ namespace GenericEventRunner.ForHandlers.Internal
 
             return null;
         }
-
-
-    }
+            }
 }
