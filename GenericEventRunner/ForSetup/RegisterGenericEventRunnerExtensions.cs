@@ -22,13 +22,10 @@ namespace GenericEventRunner.ForSetup
         /// </summary>
         /// <param name="services"></param>
         /// <param name="assembliesToScan">Series of assemblies to scan. If not provided then scans the calling assembly</param>
-        public static void RegisterGenericEventRunner(this IServiceCollection services,
+        public static List<string> RegisterGenericEventRunner(this IServiceCollection services,
             params Assembly[] assembliesToScan)
         {
-            if (!assembliesToScan.Any())
-                assembliesToScan = new Assembly[] { Assembly.GetCallingAssembly() };
-
-            services.RegisterGenericEventRunner(new GenericEventRunnerConfig(), assembliesToScan);
+            return services.RegisterGenericEventRunner(new GenericEventRunnerConfig(), assembliesToScan);
         }
 
         /// <summary>
@@ -37,20 +34,27 @@ namespace GenericEventRunner.ForSetup
         /// <param name="services"></param>
         /// <param name="config">A GenericEventRunnerConfig instance with your own settings.</param>
         /// <param name="assembliesToScan">Series of assemblies to scan. If not provided then scans the calling assembly</param>
-        public static void RegisterGenericEventRunner(this IServiceCollection services,
+        /// <returns>List of what it registered - useful for debugging</returns>
+        public static List<string> RegisterGenericEventRunner(this IServiceCollection services,
             IGenericEventRunnerConfig config,
             params Assembly[] assembliesToScan)
         {
+            var debugLogs = new List<string>();
+
             if (config == null) throw new ArgumentNullException(nameof(config));
 
             if (!assembliesToScan.Any())
+            {
                 assembliesToScan = new Assembly[]{ Assembly.GetCallingAssembly()};
+                debugLogs.Add("No assemblies provided so only scanning calling assembly.");
+            }
 
-            var eventHandlersToRegister = new List<(Type classType, Type interfaceType)>();
             var someDuringSaveHandlersFound = false;
             var someAfterSaveHandlersFound = false;
             foreach (var assembly in assembliesToScan)
             {
+                var eventHandlersToRegister = new List<(Type classType, Type interfaceType)>();
+
                 eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandler<>), assembly));
                 eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandlerAsync<>), assembly));
 
@@ -73,24 +77,42 @@ namespace GenericEventRunner.ForSetup
                         .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandlerAsync<>), assembly));
                 }
                 someAfterSaveHandlersFound |= (eventHandlersToRegister.Count > count);
+
+                debugLogs.Add($"Scanned assembly {assembly.GetName().Name} and found {eventHandlersToRegister.Count} to register");
+
+                foreach (var (implementationType, interfaceType) in eventHandlersToRegister)
+                {
+                    var attr = implementationType.GetCustomAttribute<EventHandlerConfigAttribute>();
+                    var lifeTime = attr?.HandlerLifetime ?? ServiceLifetime.Transient;
+                    if (lifeTime == ServiceLifetime.Transient)
+                        services.AddTransient(interfaceType, implementationType);
+                    else if (lifeTime == ServiceLifetime.Scoped)
+                        services.AddScoped(interfaceType, implementationType);
+                    else
+                        services.AddSingleton(interfaceType, implementationType);
+
+                    var genericPart = interfaceType.GetGenericArguments();
+                    var indexCharToRemove = interfaceType.Name.IndexOf('`');
+                    var displayInterface = $"{interfaceType.Name.Substring(0, indexCharToRemove)}<{genericPart.Single().Name}>";
+                    debugLogs.Add($"Registered {implementationType.Name} as {displayInterface}. Lifetime: {lifeTime}");
+                }
             }
 
             if (!someDuringSaveHandlersFound)
-                config.NotUsingDuringSaveHandlers = true;
-            if (!someAfterSaveHandlersFound)
-                config.NotUsingAfterSaveHandlers = true;
-
-
-            foreach (var (implementationType, interfaceType) in eventHandlersToRegister)
             {
-                var attr = implementationType.GetCustomAttribute<EventHandlerConfigAttribute>();
-                var lifeTime = attr?.HandlerLifetime ?? ServiceLifetime.Transient;
-                if (lifeTime == ServiceLifetime.Transient)
-                    services.AddTransient(interfaceType, implementationType);
-                else if (lifeTime == ServiceLifetime.Scoped)
-                    services.AddScoped(interfaceType, implementationType);
-                else
-                    services.AddSingleton(interfaceType, implementationType);
+                debugLogs.Add(config.NotUsingDuringSaveHandlers
+                    ? "You manually turned off During event handlers."
+                    : "No During event handlers were found, so turned that part off.");
+
+                config.NotUsingDuringSaveHandlers = true;
+            }
+            if (!someAfterSaveHandlersFound)
+            {
+                debugLogs.Add(config.NotUsingAfterSaveHandlers
+                    ? "You manually turned off After event handlers."
+                    : "No After event handlers were found, so turned that part off.");
+
+                config.NotUsingAfterSaveHandlers = true;
             }
 
             if (services.Contains(new ServiceDescriptor(typeof(IEventsRunner), typeof(EventsRunner), ServiceLifetime.Transient),
@@ -98,6 +120,9 @@ namespace GenericEventRunner.ForSetup
                 throw new InvalidOperationException("You can only call this method once to register the GenericEventRunner and event handlers.");
             services.AddSingleton<IGenericEventRunnerConfig>(config);
             services.AddTransient<IEventsRunner, EventsRunner>();
+            debugLogs.Add($"Finished by registering the {nameof(EventsRunner)} and {nameof(GenericEventRunnerConfig)}");
+
+            return debugLogs;
         }
 
         private static IEnumerable<(Type classType, Type interfaceType)> ClassesWithGivenEventHandlerType(Type interfaceToLookFor, Assembly assembly)

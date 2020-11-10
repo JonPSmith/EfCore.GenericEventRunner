@@ -1,6 +1,11 @@
 # Release notes
 
 
+## 2.2.1
+
+- Bug Fix: If scans multple assemblies it double registered some event handlers
+- Feature: The `RegisterGenericEventRunner` method returns a log of what it resgistered - useful for debugging. 
+
 ## 2.2.0 
 
 - Feature: GenericEventRunner is guaranteed to work with DbContext pooling - issue #3 (see note in Release Notes).

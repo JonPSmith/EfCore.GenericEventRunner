@@ -4,17 +4,26 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using EntityClasses.DomainEvents;
 using GenericEventRunner.ForHandlers;
 using GenericEventRunner.ForSetup;
+using Infrastructure2;
 using Microsoft.Extensions.DependencyInjection;
 using Test.EventsAndHandlers;
 using Xunit;
+using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests.InfrastructureTests
 {
     public class TestRegisterDomainEvents
     {
+        private ITestOutputHelper _output;
+
+        public TestRegisterDomainEvents(ITestOutputHelper output)
+        {
+            _output = output;
+        }
 
         [Fact]
         public void TestRegisterTwiceBad()
@@ -37,7 +46,8 @@ namespace Test.UnitTests.InfrastructureTests
             var services = new ServiceCollection();
 
             //ATTEMPT
-            services.RegisterGenericEventRunner(Assembly.GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute)));
+            var logs = services.RegisterGenericEventRunner(Assembly
+                .GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute)));
 
             //VERIFY
             //Before event handlers
@@ -65,6 +75,10 @@ namespace Test.UnitTests.InfrastructureTests
                 typeof(AfterHandlerDoNothingAsync),
                 ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
 
+            foreach (var log in logs)
+            {
+                _output.WriteLine(log);
+            }
         }
 
         [Fact]
@@ -128,6 +142,56 @@ namespace Test.UnitTests.InfrastructureTests
                 typeof(AfterHandlerDoNothingAsync),
                 ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeFalse();
         }
+
+        [Fact]
+        public void TestRegisterEventHandlersInfrastructure2()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+            var config = new GenericEventRunnerConfig {NotUsingAfterSaveHandlers = true};
+
+            //ATTEMPT
+            var logs = services.RegisterGenericEventRunner(config, Assembly.GetAssembly(typeof(BeforeHandlerTax2)));
+
+            //VERIFY
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<TaxRateChangedEvent>),
+                typeof(BeforeHandlerTax2),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+
+            foreach (var log in logs)
+            {
+                _output.WriteLine(log);
+            }
+
+            services.Count.ShouldEqual(3);
+        }
+
+        [Fact]
+        public void TestRegisterEventHandlersInfrastructureOneAnd2()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+
+            //ATTEMPT
+            var logs = services.RegisterGenericEventRunner(
+                Assembly.GetAssembly(typeof(BeforeHandlerThrowsExceptionWithAttribute)),
+                Assembly.GetAssembly(typeof(BeforeHandlerTax2)));
+
+            //VERIFY
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<TaxRateChangedEvent>),
+                typeof(BeforeHandlerTax2),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
+                typeof(BeforeHandlerCircularEvent),
+                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+
+            foreach (var log in logs)
+            {
+                _output.WriteLine(log);
+            }
+            services.Count.ShouldEqual(21);
+        }
+        
 
         [Fact]
         public void TestRegisterEventHandlersTwiceBad()

@@ -25,6 +25,7 @@
     <ProjectReference Include="..\DataLayer\DataLayer.csproj" />
     <ProjectReference Include="..\EntityClasses\EntityClasses.csproj" />
     <ProjectReference Include="..\GenericEventRunner\GenericEventRunner.csproj" />
+    <ProjectReference Include="..\Infrastructure2\Infrastructure2.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 

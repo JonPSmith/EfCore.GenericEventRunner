@@ -12,10 +12,10 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.2.0</PackageVersion>
-    <Version>2.2.0</Version>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <FileVersion>2.2.0.0</FileVersion>
+    <PackageVersion>2.2.1</PackageVersion>
+    <Version>2.2.1</Version>
+    <AssemblyVersion>2.2.1.0</AssemblyVersion>
+    <FileVersion>2.2.1.0</FileVersion>
     <PackageId>EfCore.GenericEventRunner</PackageId>
     <Authors>Jon P Smith</Authors>
     <Company>Selective Analytics</Company>
@@ -28,8 +28,8 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      - Feature: GenericEventRunner is guaranteed to work with DbContext pooling - issue #3 (see note in Release Notes).
-      - Minor change: If configration `NotUsingDuringSaveHandlers` is true, then it supressess the running of the DuringEvents part.
+      - Bug Fix: If scans multple assemblies it double registered some event handlers
+      - Feature: The `RegisterGenericEventRunner` method returns a log of what it resgistered - useful for debugging.
     </PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerNuGetIcon128.png</PackageIconUrl>
   </PropertyGroup>
