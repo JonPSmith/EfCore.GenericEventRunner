@@ -1,14 +1,9 @@
 # Release notes
 
 
-## ToDo
+## ToDo 
 - Don't register an event handler if it is already registered with the DI provider.
-- Add [RemoveDuplicate] attribute which removes duplicate events in each group - this stops something being triggering twice. See Note below
-
-#### Remove duplicates
-
-- Events are considered of the event type is the same and the calling entity are the same reference. 
-- Duplicates are removed in a single read of the events. 
+- New feature - Add [RemoveDuplicateEvents] attribute to event class to ensure only one event per type, per entity. Useful if you want an event to only trigger once.
 
 ## 2.2.2
 
@@ -17,7 +12,7 @@
 ## 2.2.1
 
 - Bug Fix: If scans multple assemblies it double registered some event handlers
-- Feature: The `RegisterGenericEventRunner` method returns a log of what it resgistered - useful for debugging. 
+- Feature: The `RegisterGenericEventRunner` method returns a log of what it resgistered - useful for debugging startup. 
 
 ## 2.2.0 
 

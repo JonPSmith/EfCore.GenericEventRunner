@@ -29,7 +29,7 @@
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
       NOT DONE YET!!!!!- Don't register an event handler if it is already registered with the DI provider.
-      - Removes duplicate events in each group - this stops something being triggering twice.
+      New feature - Add [RemoveDuplicateEvents] attribute to event class to ensure only one event per type, per entity.
     </PackageReleaseNotes>
     <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerNuGetIcon128.png</PackageIconUrl>
   </PropertyGroup>
