@@ -6,10 +6,11 @@ using System;
 namespace GenericEventRunner.DomainParts
 {
     /// <summary>
-    /// Add this attribute to a During <see cref="IEntityEvent"/> to make the event handler run before SaveChanges
+    /// Add this attribute to a <see cref="IEntityEvent"/> and the EventRunner will remove events that a) have the same type, and b) come from the same entity
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class MakeDuringEventRunBeforeSaveChangesAttribute : Attribute
+    public class RemoveDuplicateEventsAttribute : Attribute
     {
+        
     }
 }

@@ -2,8 +2,13 @@
 
 
 ## ToDo
-- Check if a event handler is already registered. If so don't register it again and output warning in the `RegisterGenericEventRunner` debugLogs.
-- Dedup events in each run - this stops something being triggering twice. (add warning log if happens).
+- Don't register an event handler if it is already registered with the DI provider.
+- Add [RemoveDuplicate] attribute which removes duplicate events in each group - this stops something being triggering twice. See Note below
+
+#### Remove duplicates
+
+- Events are considered of the event type is the same and the calling entity are the same reference. 
+- Duplicates are removed in a single read of the events. 
 
 ## 2.2.2
 

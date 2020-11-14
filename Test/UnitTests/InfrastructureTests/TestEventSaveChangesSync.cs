@@ -196,55 +196,6 @@ I could not accept this order because there wasn't enough Product1 in stock.");
             }
         }
 
-        [Fact]
-        public void TestEntityAndEventComparer()
-        {
-            var book = new TaxRate(DateTime.Now, 123);
-            var e1 = new EntityAndEvent(book, new TaxRateChangedEvent(123, () => { }));
-            var e2 = new EntityAndEvent(book, new TaxRateChangedEvent(123, () => { }));
-            var e3 = new EntityAndEvent(book, new NewBookEvent());
-
-            e1.Equals(e2).ShouldBeTrue();
-            e1.Equals(e3).ShouldBeFalse();
-
-            var ees = (new List<EntityAndEvent> {e1, e2, e3}).Distinct().ToList();
-            ees.Count.ShouldEqual(2);
-        }
-
-        [Fact]
-        public void TestDeDupEvents()
-        {
-            //SETUP
-            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
-            var logs = new List<LogOutput>();
-            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
-            {
-                var itemDto = new BasketItemDto
-                {
-                    ProductName = context.ProductStocks.OrderBy(x => x.NumInStock).First().ProductName,
-                    NumOrdered = 2,
-                    ProductPrice = 123
-                };
-                var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
-                context.Add(order);
-                context.SaveChanges();
-                logs.Clear();
-
-                //ATTEMPT
-                var count = 0;
-                order.AddEvent(new TaxRateChangedEvent(123, () => count++));
-                order.AddEvent(new TaxRateChangedEvent(123, () => count++));
-                context.SaveChanges();
-
-                //VERIFY
-                count.ShouldEqual(1);
-                //logs.Count.ShouldEqual(3);
-                //logs[0].Message.ShouldEqual("B1: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.OrderDispatchedBeforeHandler.");
-                //logs[1].Message.ShouldEqual("B2: About to run a BeforeSave event handler Infrastructure.BeforeEventHandlers.TaxRateChangedHandler.");
-                //logs[2].Message.ShouldEqual("A1: About to run a AfterSave event handler Infrastructure.AfterEventHandlers.OrderReadyToDispatchAfterHandler.");
-            }
-        }
-
         [Theory]
         [InlineData(EventToSend.BeforeSave)]
         [InlineData(EventToSend.AfterSave)]
