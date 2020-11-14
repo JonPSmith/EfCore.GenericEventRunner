@@ -19,17 +19,22 @@ namespace GenericEventRunner.ForHandlers.Internal
             HasRemoveDuplicateAttribute = EntityEvent
                 .GetType()
                 .GetCustomAttribute<RemoveDuplicateEventsAttribute>() != null;
+            HasDuringEventRunBeforeSave = EntityEvent
+                .GetType()
+                .GetCustomAttribute<MakeDuringEventRunBeforeSaveChangesAttribute>() != null;
         }
 
         public object CallingEntity { get; }
         public IEntityEvent EntityEvent { get; }
 
         public bool HasRemoveDuplicateAttribute { get; }
+        public bool HasDuringEventRunBeforeSave { get; }
 
         private bool Equals(EntityAndEvent other)
         {
             return ReferenceEquals(CallingEntity, other.CallingEntity) && 
                    EntityEvent.GetType() == other.EntityEvent.GetType() &&
+                   HasDuringEventRunBeforeSave == other.HasDuringEventRunBeforeSave &&
                    HasRemoveDuplicateAttribute &&     //Only the same if both has RemoveDuplicateAttribute
                    other.HasRemoveDuplicateAttribute; //Only the same if both has RemoveDuplicateAttribute
         }

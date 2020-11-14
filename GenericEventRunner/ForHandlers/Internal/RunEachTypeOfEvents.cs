@@ -43,14 +43,9 @@ namespace GenericEventRunner.ForHandlers.Internal
             if (!duringEvents.Any())
                 return false;
 
-            //Find the events marked to run before SaveChanges
-            _duringBeforeEvents = duringEvents
-                .Where(x => x.EntityEvent.GetType()
-                                .GetCustomAttribute<MakeDuringEventRunBeforeSaveChangesAttribute>() != null)
-                .ToList();
-
-            duringEvents.RemoveAll(x => _duringBeforeEvents.Contains(x));
-            _duringAfterEvents = duringEvents;
+            //Find the events marked to run before/after SaveChanges
+            _duringBeforeEvents = duringEvents.Where(x => x.HasDuringEventRunBeforeSave).ToList();
+            _duringAfterEvents = duringEvents.Where(x => !x.HasDuringEventRunBeforeSave).ToList();
 
             return true;
         }

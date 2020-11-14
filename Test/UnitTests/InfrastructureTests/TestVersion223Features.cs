@@ -7,6 +7,7 @@ using System.Linq;
 using DataLayer;
 using EntityClasses;
 using EntityClasses.DomainEvents;
+using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForHandlers.Internal;
 using Infrastructure.BeforeEventHandlers;
 using Test.EfHelpers;
@@ -44,7 +45,7 @@ namespace Test.UnitTests.InfrastructureTests
         }
 
         [Fact]
-        public void TestDeDupEvents()
+        public void TestDeDupBeforeEvents()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
@@ -69,6 +70,37 @@ namespace Test.UnitTests.InfrastructureTests
                 //VERIFY
                 normalCount.ShouldEqual(2);
                 deDepCount.ShouldEqual(1);
+                foreach (var logOutput in logs)
+                {
+                    _output.WriteLine(logOutput.Message);
+                }
+            }
+        }
+
+        [Fact]
+        public void TestDeDupBeforeDuringAfterEvents()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<ExampleDbContext>();
+            var logs = new List<LogOutput>();
+            var context = options.CreateAndSeedDbWithDiForHandlers<OrderCreatedHandler>(logs);
+            {
+                var tax = new TaxRate(DateTime.Now, 123);
+                context.Add(tax);
+                context.SaveChanges();
+                logs.Clear();
+
+                //ATTEMPT
+                var deDepCount = 0;
+                tax.AddEvent(new DeDupEvent(() => deDepCount++), EventToSend.BeforeAndAfterSave);
+                tax.AddEvent(new DeDupEvent(() => deDepCount++), EventToSend.BeforeAndAfterSave);
+                tax.AddEvent(new DeDupEvent(() => deDepCount++), EventToSend.DuringSave);
+                tax.AddEvent(new DeDupEvent(() => deDepCount++), EventToSend.DuringSave);
+
+                context.SaveChanges();
+
+                //VERIFY
+                deDepCount.ShouldEqual(3);
                 foreach (var logOutput in logs)
                 {
                     _output.WriteLine(logOutput.Message);

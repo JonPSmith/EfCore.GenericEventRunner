@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GenericEventRunner.ForSetup
 {
-    public class ServiceDescriptorCompare : IEqualityComparer<ServiceDescriptor>
+    public class ServiceDescriptorIncludeLifeTimeCompare : IEqualityComparer<ServiceDescriptor>
     {
         public bool Equals(ServiceDescriptor x, ServiceDescriptor y)
         {

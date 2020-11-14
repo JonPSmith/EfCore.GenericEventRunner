@@ -7,7 +7,7 @@ using StatusGeneric;
 
 namespace Infrastructure.BeforeEventHandlers
 {
-    public class DeDupEventHandler : IBeforeSaveEventHandler<DeDupEvent>
+    public class DeDupBeforeEventHandler : IBeforeSaveEventHandler<DeDupEvent>
     {
         public IStatusGeneric Handle(object callingEntity, DeDupEvent domainEvent)
         {

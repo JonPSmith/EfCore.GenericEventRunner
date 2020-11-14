@@ -49,7 +49,7 @@ namespace Test.EfHelpers
                 Assembly.GetExecutingAssembly()         //This will pick up any event handlers in your unit tests assembly
             };
 
-            services.RegisterGenericEventRunner(config ?? new GenericEventRunnerConfig(), assembliesToScan);
+            var debug = services.RegisterGenericEventRunner(config ?? new GenericEventRunnerConfig(), assembliesToScan);
             services.AddSingleton(options);
             services.AddScoped<TContext>();
             var serviceProvider = services.BuildServiceProvider();

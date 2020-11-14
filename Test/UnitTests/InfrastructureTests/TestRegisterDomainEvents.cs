@@ -53,27 +53,27 @@ namespace Test.UnitTests.InfrastructureTests
             //Before event handlers
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
                 typeof(BeforeHandlerCircularEvent),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>), 
                 typeof(BeforeHandlerThrowsExceptionWithAttribute),
-                ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Scoped), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             //During event handlers
             services.Contains(new ServiceDescriptor(typeof(IDuringSaveEventHandler<EventDoNothing>),
                 typeof(DuringHandlerDoNothing),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             //After event handlers
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<EventTestAfterExceptionHandler>),
                 typeof(AfterHandlerThrowsException),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             //Async event handlers
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandlerAsync<EventDoNothing>),
                 typeof(BeforeHandlerDoNothingAsync),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandlerAsync<EventDoNothing>),
                 typeof(AfterHandlerDoNothingAsync),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             foreach (var log in logs)
             {
@@ -94,21 +94,21 @@ namespace Test.UnitTests.InfrastructureTests
             //VERIFY
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
                 typeof(BeforeHandlerCircularEvent),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>),
                 typeof(BeforeHandlerThrowsExceptionWithAttribute),
-                ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Scoped), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<EventTestAfterExceptionHandler>),
                 typeof(AfterHandlerThrowsException),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandlerAsync<EventDoNothing>),
                 typeof(AfterHandlerDoNothingAsync),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             //During event handlers
             services.Contains(new ServiceDescriptor(typeof(IDuringSaveEventHandler<EventDoNothing>),
                 typeof(DuringHandlerDoNothing),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeFalse();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeFalse();
         }
 
         [Fact]
@@ -124,23 +124,23 @@ namespace Test.UnitTests.InfrastructureTests
             //VERIFY
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
                 typeof(BeforeHandlerCircularEvent),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventTestExceptionHandlerWithAttribute>),
                 typeof(BeforeHandlerThrowsExceptionWithAttribute),
-                ServiceLifetime.Scoped), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Scoped), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             //During event handlers
             services.Contains(new ServiceDescriptor(typeof(IDuringSaveEventHandler<EventDoNothing>),
                 typeof(DuringHandlerDoNothing),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             //after event handlers
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<EventTestAfterExceptionHandler>),
                 typeof(AfterHandlerThrowsException),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeFalse();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeFalse();
             services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandlerAsync<EventDoNothing>),
                 typeof(AfterHandlerDoNothingAsync),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeFalse();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeFalse();
         }
 
         [Fact]
@@ -156,7 +156,7 @@ namespace Test.UnitTests.InfrastructureTests
             //VERIFY
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<TaxRateChangedEvent>),
                 typeof(BeforeHandlerTax2),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             foreach (var log in logs)
             {
@@ -180,10 +180,10 @@ namespace Test.UnitTests.InfrastructureTests
             //VERIFY
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<TaxRateChangedEvent>),
                 typeof(BeforeHandlerTax2),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<EventCircularEvent>),
                 typeof(BeforeHandlerCircularEvent),
-                ServiceLifetime.Transient), new ServiceDescriptorCompare()).ShouldBeTrue();
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             foreach (var log in logs)
             {
