@@ -7,7 +7,7 @@ using StatusGeneric;
 
 namespace OnlyBeforeHandlers
 {
-    public class ExtraOrderCreatedHandler : IBeforeSaveEventHandler<OrderCreatedEvent>
+    public class BeforeHandler : IBeforeSaveEventHandler<OrderCreatedEvent>
     {
 
         public IStatusGeneric Handle(object callingEntity, OrderCreatedEvent domainEvent)

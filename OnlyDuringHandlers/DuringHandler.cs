@@ -8,7 +8,7 @@ using StatusGeneric;
 
 namespace OnlyDuringHandlers
 {
-    public class ExtraDuringEventHandler : IDuringSaveEventHandler<NewBookEvent>
+    public class DuringHandler : IDuringSaveEventHandler<NewBookEvent>
     {
         public IStatusGeneric Handle(object callingEntity, NewBookEvent domainEvent, Guid uniqueKey)
         {

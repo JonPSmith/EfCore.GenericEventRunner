@@ -6,7 +6,7 @@ using GenericEventRunner.ForHandlers;
 
 namespace OnlyAfterHandlers
 {
-    public class ExtraDispatchAfterHandler : IAfterSaveEventHandler<OrderReadyToDispatchEvent>
+    public class AfterHandler : IAfterSaveEventHandler<OrderReadyToDispatchEvent>
     {
         public void Handle(object callingEntity, OrderReadyToDispatchEvent domainEvent)
         {

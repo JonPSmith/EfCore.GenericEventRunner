@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers;
@@ -53,48 +54,26 @@ namespace GenericEventRunner.ForSetup
             var someAfterSaveHandlersFound = false;
             foreach (var assembly in assembliesToScan)
             {
-                var eventHandlersToRegister = new List<(Type classType, Type interfaceType)>();
+                debugLogs.Add($"Starting scanning assembly {assembly.GetName().Name} for event handlers.");
+                services.RegisterHandlersIfNotAlreadyRegistered(debugLogs,
+                    typeof(IBeforeSaveEventHandler<>), assembly);
+                services.RegisterHandlersIfNotAlreadyRegistered(debugLogs,
+                    typeof(IBeforeSaveEventHandlerAsync<>), assembly);
 
-                eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandler<>), assembly));
-                eventHandlersToRegister.AddRange(ClassesWithGivenEventHandlerType(typeof(IBeforeSaveEventHandlerAsync<>), assembly));
-
-                var count = eventHandlersToRegister.Count;
                 if (!config.NotUsingDuringSaveHandlers)
                 {
-                    eventHandlersToRegister
-                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IDuringSaveEventHandler<>), assembly));
-                    eventHandlersToRegister
-                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IDuringSaveEventHandlerAsync<>), assembly));
+                    someDuringSaveHandlersFound |= services.RegisterHandlersIfNotAlreadyRegistered(debugLogs,
+                        typeof(IDuringSaveEventHandler<>), assembly);
+                    someDuringSaveHandlersFound |= services.RegisterHandlersIfNotAlreadyRegistered(debugLogs,
+                        typeof(IDuringSaveEventHandlerAsync<>), assembly);
                 }
-                someDuringSaveHandlersFound |= (eventHandlersToRegister.Count > count);
 
-                count = eventHandlersToRegister.Count;
                 if (!config.NotUsingAfterSaveHandlers)
                 {
-                    eventHandlersToRegister
-                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandler<>), assembly));
-                    eventHandlersToRegister
-                        .AddRange(ClassesWithGivenEventHandlerType(typeof(IAfterSaveEventHandlerAsync<>), assembly));
-                }
-                someAfterSaveHandlersFound |= (eventHandlersToRegister.Count > count);
-
-                debugLogs.Add($"Scanned assembly {assembly.GetName().Name} and found {eventHandlersToRegister.Count} to register");
-
-                foreach (var (implementationType, interfaceType) in eventHandlersToRegister)
-                {
-                    var attr = implementationType.GetCustomAttribute<EventHandlerConfigAttribute>();
-                    var lifeTime = attr?.HandlerLifetime ?? ServiceLifetime.Transient;
-                    if (lifeTime == ServiceLifetime.Transient)
-                        services.AddTransient(interfaceType, implementationType);
-                    else if (lifeTime == ServiceLifetime.Scoped)
-                        services.AddScoped(interfaceType, implementationType);
-                    else
-                        services.AddSingleton(interfaceType, implementationType);
-
-                    var genericPart = interfaceType.GetGenericArguments();
-                    var indexCharToRemove = interfaceType.Name.IndexOf('`');
-                    var displayInterface = $"{interfaceType.Name.Substring(0, indexCharToRemove)}<{genericPart.Single().Name}>";
-                    debugLogs.Add($"Registered {implementationType.Name} as {displayInterface}. Lifetime: {lifeTime}");
+                    someAfterSaveHandlersFound |= services.RegisterHandlersIfNotAlreadyRegistered(debugLogs,
+                    typeof(IAfterSaveEventHandler<>), assembly);
+                    someAfterSaveHandlersFound |= services.RegisterHandlersIfNotAlreadyRegistered(debugLogs,
+                        typeof(IAfterSaveEventHandlerAsync<>), assembly);
                 }
             }
 
@@ -123,6 +102,39 @@ namespace GenericEventRunner.ForSetup
             debugLogs.Add($"Finished by registering the {nameof(EventsRunner)} and {nameof(GenericEventRunnerConfig)}");
 
             return debugLogs;
+        }
+
+        private static bool  RegisterHandlersIfNotAlreadyRegistered(this IServiceCollection services,
+            List<string> debugLogs,
+            Type interfaceToLookFor, Assembly assembly)
+        {
+            var noLifeTimeCompare = new ServiceDescriptorNoLifeTimeCompare();
+            var someFound = false;
+            foreach (var (implementationType, interfaceType) in ClassesWithGivenEventHandlerType(interfaceToLookFor, assembly))
+            {
+                var attr = implementationType.GetCustomAttribute<EventHandlerConfigAttribute>();
+                var lifeTime = attr?.HandlerLifetime ?? ServiceLifetime.Transient;
+
+                var genericPart = interfaceType.GetGenericArguments();
+                var indexCharToRemove = interfaceType.Name.IndexOf('`');
+                var displayInterface = $"{interfaceType.Name.Substring(0, indexCharToRemove)}<{genericPart.Single().Name}>";
+
+                if (services.Contains(new ServiceDescriptor(interfaceType, implementationType, lifeTime), noLifeTimeCompare))
+                    debugLogs.Add($"Already registered {implementationType.Name} as {displayInterface}");
+                else
+                {
+                    if (lifeTime == ServiceLifetime.Transient)
+                        services.AddTransient(interfaceType, implementationType);
+                    else if (lifeTime == ServiceLifetime.Scoped)
+                        services.AddScoped(interfaceType, implementationType);
+                    else
+                        services.AddSingleton(interfaceType, implementationType);
+                    debugLogs.Add($"Registered {implementationType.Name} as {displayInterface}. Lifetime: {lifeTime}");
+                }
+                someFound = true;
+            }
+
+            return someFound;
         }
 
         private static IEnumerable<(Type classType, Type interfaceType)> ClassesWithGivenEventHandlerType(Type interfaceToLookFor, Assembly assembly)

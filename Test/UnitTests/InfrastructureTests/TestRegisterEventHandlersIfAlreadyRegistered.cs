@@ -26,7 +26,7 @@ namespace Test.UnitTests.InfrastructureTests
         }
 
         [Fact]
-        public void TestRegisterEventHandlersOnlyHandlers()
+        public void TestRegisterEventHandlersThreeProjects()
         {
             //SETUP
             var services = new ServiceCollection();
@@ -34,20 +34,150 @@ namespace Test.UnitTests.InfrastructureTests
 
             //ATTEMPT
             var logs = services.RegisterGenericEventRunner(config,
-                Assembly.GetAssembly(typeof(ExtraDispatchAfterHandler)),
-                Assembly.GetAssembly(typeof(ExtraOrderCreatedHandler)),
-                Assembly.GetAssembly(typeof(ExtraDuringEventHandler))
+                Assembly.GetAssembly(typeof(BeforeHandler)),
+                Assembly.GetAssembly(typeof(DuringHandler)),
+                Assembly.GetAssembly(typeof(AfterHandler))
                 );
 
             //VERIFY
-            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<OrderReadyToDispatchEvent>),
-                typeof(ExtraDispatchAfterHandler),
-                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<OrderCreatedEvent>),
-                typeof(ExtraOrderCreatedHandler),
+                typeof(BeforeHandler),
                 ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
             services.Contains(new ServiceDescriptor(typeof(IDuringSaveEventHandler<NewBookEvent>),
-                typeof(ExtraDuringEventHandler),
+                typeof(DuringHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<OrderReadyToDispatchEvent>),
+                typeof(AfterHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+
+            foreach (var log in logs)
+            {
+                _output.WriteLine(log);
+            }
+
+            config.NotUsingDuringSaveHandlers.ShouldBeFalse();
+            config.NotUsingAfterSaveHandlers.ShouldBeFalse();
+            services.Count.ShouldEqual(5);
+        }
+
+
+        [Fact]
+        public void TestRegisterEventHandlersOnlyBefore()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+            var config = new GenericEventRunnerConfig();
+
+            //ATTEMPT
+            var logs = services.RegisterGenericEventRunner(config,
+                Assembly.GetAssembly(typeof(BeforeHandler))
+            );
+
+            //VERIFY
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<OrderCreatedEvent>),
+                typeof(BeforeHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+
+            foreach (var log in logs)
+            {
+                _output.WriteLine(log);
+            }
+
+            config.NotUsingDuringSaveHandlers.ShouldBeTrue();
+            config.NotUsingAfterSaveHandlers.ShouldBeTrue();
+            services.Count.ShouldEqual(3);
+        }
+
+        [Fact]
+        public void TestRegisterEventHandlersBeforeAlreadyRegisteredThreeProjects()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+            var config = new GenericEventRunnerConfig();
+            services.AddTransient<IBeforeSaveEventHandler<OrderCreatedEvent>, BeforeHandler>();
+
+            //ATTEMPT
+            var logs = services.RegisterGenericEventRunner(config,
+                Assembly.GetAssembly(typeof(BeforeHandler)),
+                Assembly.GetAssembly(typeof(DuringHandler)),
+                Assembly.GetAssembly(typeof(AfterHandler))
+            );
+
+            //VERIFY
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<OrderCreatedEvent>),
+                typeof(BeforeHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IDuringSaveEventHandler<NewBookEvent>),
+                typeof(DuringHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<OrderReadyToDispatchEvent>),
+                typeof(AfterHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+
+            foreach (var log in logs)
+            {
+                _output.WriteLine(log);
+            }
+
+            config.NotUsingDuringSaveHandlers.ShouldBeFalse();
+            config.NotUsingAfterSaveHandlers.ShouldBeFalse();
+            services.Count.ShouldEqual(5);
+        }
+
+        [Fact]
+        public void TestRegisterEventHandlersBeforeAlreadyRegisteredJustBefore()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+            var config = new GenericEventRunnerConfig();
+            services.AddTransient<IBeforeSaveEventHandler<OrderCreatedEvent>, BeforeHandler>();
+
+            //ATTEMPT
+            var logs = services.RegisterGenericEventRunner(config,
+                Assembly.GetAssembly(typeof(BeforeHandler))
+            );
+
+            //VERIFY
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<OrderCreatedEvent>),
+                typeof(BeforeHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue(); ;
+
+            foreach (var log in logs)
+            {
+                _output.WriteLine(log);
+            }
+
+            config.NotUsingDuringSaveHandlers.ShouldBeTrue();
+            config.NotUsingAfterSaveHandlers.ShouldBeTrue();
+            services.Count.ShouldEqual(3);
+        }
+
+        [Fact]
+        public void TestRegisterEventHandlersAllAlreadyRegisteredThreeProjects()
+        {
+            //SETUP
+            var services = new ServiceCollection();
+            var config = new GenericEventRunnerConfig();
+            services.AddTransient<IBeforeSaveEventHandler<OrderCreatedEvent>, BeforeHandler>();
+            services.AddTransient<IDuringSaveEventHandler<NewBookEvent>, DuringHandler>();
+            services.AddTransient<IAfterSaveEventHandler<OrderReadyToDispatchEvent>, AfterHandler>();
+
+            //ATTEMPT
+            var logs = services.RegisterGenericEventRunner(config,
+                Assembly.GetAssembly(typeof(BeforeHandler)),
+                Assembly.GetAssembly(typeof(DuringHandler)),
+                Assembly.GetAssembly(typeof(AfterHandler))
+            );
+
+            //VERIFY
+            services.Contains(new ServiceDescriptor(typeof(IBeforeSaveEventHandler<OrderCreatedEvent>),
+                typeof(BeforeHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IDuringSaveEventHandler<NewBookEvent>),
+                typeof(DuringHandler),
+                ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
+            services.Contains(new ServiceDescriptor(typeof(IAfterSaveEventHandler<OrderReadyToDispatchEvent>),
+                typeof(AfterHandler),
                 ServiceLifetime.Transient), new ServiceDescriptorIncludeLifeTimeCompare()).ShouldBeTrue();
 
             foreach (var log in logs)

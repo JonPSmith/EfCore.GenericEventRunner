@@ -1,8 +1,8 @@
 # Release notes
 
 
-## ToDo 
-- Don't register an event handler if it is already registered with the DI provider.
+## 2.3.0 
+- New feature - Doesn't register an event handler if it is already registered with the DI provider. This stops multiple registering of event handlers.
 - New feature - Add [RemoveDuplicateEvents] attribute to event class to ensure only one event per type, per entity. Useful if you want an event to only trigger once.
 
 ## 2.2.2
