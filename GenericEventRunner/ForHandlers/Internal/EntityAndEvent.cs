@@ -32,11 +32,10 @@ namespace GenericEventRunner.ForHandlers.Internal
 
         private bool Equals(EntityAndEvent other)
         {
-            return ReferenceEquals(CallingEntity, other.CallingEntity) && 
+            //Only equal if class has the RemoveDuplicate attribute
+            return HasRemoveDuplicateAttribute &&
                    EntityEvent.GetType() == other.EntityEvent.GetType() &&
-                   HasDuringEventRunBeforeSave == other.HasDuringEventRunBeforeSave &&
-                   HasRemoveDuplicateAttribute &&     //Only the same if both has RemoveDuplicateAttribute
-                   other.HasRemoveDuplicateAttribute; //Only the same if both has RemoveDuplicateAttribute
+                   ReferenceEquals(CallingEntity, other.CallingEntity);
         }
 
         public override bool Equals(object obj)

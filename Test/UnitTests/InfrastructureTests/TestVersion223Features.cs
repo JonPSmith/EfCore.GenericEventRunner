@@ -31,17 +31,46 @@ namespace Test.UnitTests.InfrastructureTests
         [Fact]
         public void TestEntityAndEventComparer()
         {
-            var tax = new TaxRate(DateTime.Now, 123);
-            var e1 = new EntityAndEvent(tax, new DeDupEvent(() => { }));
-            var e2 = new EntityAndEvent(tax, new DeDupEvent(() => { }));
-            var e3 = new EntityAndEvent(tax, new NewBookEvent());
-            var e4 = new EntityAndEvent(tax, new NewBookEvent());
+            var tax1 = new TaxRate(DateTime.Now, 123);
+            var tax2 = new TaxRate(DateTime.Now, 123);
+            var d1 = new EntityAndEvent(tax1, new DeDupEvent(() => { }));
+            var d2 = new EntityAndEvent(tax1, new DeDupEvent(() => { }));
 
-            e1.Equals(e2).ShouldBeTrue();
-            e1.Equals(e3).ShouldBeFalse();
+            var d3 = new EntityAndEvent(tax2, new DeDupEvent(() => { }));
 
-            var ees = (new List<EntityAndEvent> { e1, e2, e3, e4 }).Distinct().ToList();
-            ees.Count.ShouldEqual(3);
+            var n1 = new EntityAndEvent(tax1, new NewBookEvent());
+            var n2 = new EntityAndEvent(tax1, new NewBookEvent());
+
+            d1.Equals(d2).ShouldBeTrue();
+            d1.Equals(d3).ShouldBeFalse();
+
+
+            d1.Equals(n1).ShouldBeFalse();
+            n1.Equals(n2).ShouldBeFalse();
+
+            var ees = (new List<EntityAndEvent> { d1,d2,d3,n1,n2 }).Distinct().ToList();
+            ees.Select(x => x.EntityEvent.GetType().Name).ShouldEqual(new []{ "DeDupEvent", "DeDupEvent", "NewBookEvent", "NewBookEvent" });
+            ees[0].ShouldEqual(d1);
+            ees[1].ShouldEqual(d3);
+        }
+
+        [Fact]
+        public void TestEntityAndEventComparerDistinctOrder()
+        {
+            var tax1 = new TaxRate(DateTime.Now, 123);
+            var tax2 = new TaxRate(DateTime.Now, 123);
+            var d1 = new EntityAndEvent(tax1, new DeDupEvent(() => { }));
+            var d2 = new EntityAndEvent(tax1, new DeDupEvent(() => { }));
+
+            var d3 = new EntityAndEvent(tax2, new DeDupEvent(() => { }));
+            var d4 = new EntityAndEvent(tax2, new DeDupEvent(() => { }));
+
+            var ees = (new List<EntityAndEvent> { d1, d2, d3, d2, d4}).Distinct().ToList();
+            ees.Count.ShouldEqual(2);
+            ReferenceEquals(ees[0], d1).ShouldBeTrue();
+            ReferenceEquals(ees[0], d1).ShouldBeTrue();
+            ees[0].ShouldEqual(d1);
+            ees[1].ShouldEqual(d3);
         }
 
         [Fact]
