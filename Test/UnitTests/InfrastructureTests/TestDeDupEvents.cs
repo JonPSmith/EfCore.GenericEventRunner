@@ -18,11 +18,11 @@ using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests.InfrastructureTests
 {
-    public class TestVersion223Features
+    public class TestDeDupEvents
     {
         private readonly ITestOutputHelper _output;
 
-        public TestVersion223Features(ITestOutputHelper output)
+        public TestDeDupEvents(ITestOutputHelper output)
         {
             _output = output;
         }
