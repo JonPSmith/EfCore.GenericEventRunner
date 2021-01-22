@@ -6,6 +6,12 @@ This is an open source project (MIT license) available [on GitHub](https://githu
 
 Documentation and links to articles can be found via the [Documentation link](https://github.com/JonPSmith/EfCore.GenericEventRunner/wiki).
 
+## Three types of events
+
+The following image shows the three types of events and when they are called.
+
+![Three types of events](https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/GenericEventRunnerTypesOfEvents.png)
+
 ## Useful articles
 
 * [Article about this event-driven architecture](https://www.thereformedprogrammer.net/a-robust-event-driven-architecture-for-using-with-entity-framework-core/) - good to get an idea of what the library is trying to do.
