@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="EfCore.GenericEventRunner.DomainParts" Version="2.2.1" />
     <PackageReference Include="GenericServices.StatusGeneric" Version="1.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.11" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -27,7 +27,8 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      Bug Fix - better handling of exceptions in sync methods
+      - Bug Fix - better handling of exceptions in sync methods
+      - Now needs EF Core 3.1.11 or above
     </PackageReleaseNotes>
     <PackageIcon>GenericEventsRunnerNuGetIcon128.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -38,7 +39,7 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-     <DocumentationFile>SoftDeleteServices.xml</DocumentationFile>
+     <DocumentationFile></DocumentationFile>
     <OutputPath>bin\Release\</OutputPath>
   </PropertyGroup>
 
