@@ -12,30 +12,34 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.3.0</PackageVersion>
-    <Version>2.3.0</Version>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
-    <FileVersion>2.3.0.0</FileVersion>
+    <PackageVersion>2.3.1</PackageVersion>
+    <Version>2.3.1</Version>
+    <AssemblyVersion>2.3.1.0</AssemblyVersion>
+    <FileVersion>2.3.1.0</FileVersion>
     <PackageId>EfCore.GenericEventRunner</PackageId>
     <Authors>Jon P Smith</Authors>
     <Company>Selective Analytics</Company>
     <Product>EfCore.GenericEventRunner</Product>
     <Description>A library to provide domain event handling to EF Core.</Description>
     <Copyright>Copyright (c) 2019 Jon P Smith</Copyright>
-    <PackageLicenseUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner</PackageProjectUrl>
     <RepositoryUrl>https://github.com/JonPSmith/EfCore.GenericEventRunner</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      New feature - Doesn't register an event handler if it is already registered with the DI provider. This stops multiple registering of event handlers.
-      New feature - Add [RemoveDuplicateEvents] attribute to event class to ensure only one event per type, per entity.
+      Bug Fix - better handling of exceptions in sync methods
     </PackageReleaseNotes>
-    <PackageIconUrl>https://raw.githubusercontent.com/JonPSmith/EfCore.GenericEventRunner/master/GenericEventsRunnerNuGetIcon128.png</PackageIconUrl>
+    <PackageIcon>GenericEventsRunnerNuGetIcon128.png</PackageIcon>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="GenericEventsRunnerNuGetIcon128.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.1\GenericEventRunner.xml</DocumentationFile>
+     <DocumentationFile>SoftDeleteServices.xml</DocumentationFile>
+    <OutputPath>bin\Release\</OutputPath>
   </PropertyGroup>
 
 </Project>

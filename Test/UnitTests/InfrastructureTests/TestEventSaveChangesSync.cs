@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using DataLayer;
 using EntityClasses;
 using EntityClasses.DomainEvents;
@@ -12,7 +11,6 @@ using EntityClasses.SupportClasses;
 using GenericEventRunner.DomainParts;
 using GenericEventRunner.ForDbContext;
 using GenericEventRunner.ForHandlers;
-using GenericEventRunner.ForHandlers.Internal;
 using GenericEventRunner.ForSetup;
 using Infrastructure.BeforeEventHandlers;
 using Test.EfHelpers;
@@ -215,8 +213,8 @@ I could not accept this order because there wasn't enough Product1 in stock.");
 
                 //VERIFY
                 ex.Message.ShouldEqual(beforeAfter == EventToSend.BeforeSave
-                    ? $"Could not find a BeforeSave event handler for the event {typeof(EventWithNoHandler).Name}."
-                    : $"Could not find a AfterSave event handler for the event {typeof(EventWithNoHandler).Name}.");
+                    ? $"Could not find a BeforeSave event handler for the event {nameof(EventWithNoHandler)}."
+                    : $"Could not find a AfterSave event handler for the event {nameof(EventWithNoHandler)}.");
             }
         }
 

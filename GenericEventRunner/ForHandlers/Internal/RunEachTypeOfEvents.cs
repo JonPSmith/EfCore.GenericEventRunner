@@ -79,8 +79,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                     {
                         var findRunStatus =
                             _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, loopCount, BeforeDuringOrAfter.BeforeSave, allowAsync);
-                        if (!findRunStatus.IsCompleted)
-                            throw new InvalidOperationException("Can only run sync tasks");
+                        findRunStatus.CheckSyncValueTaskWorked();
                         status.CombineStatuses(findRunStatus.Result);
                     }
                     if (!status.IsValid && _config.StopOnFirstBeforeHandlerThatHasAnError)
@@ -108,7 +107,7 @@ namespace GenericEventRunner.ForHandlers.Internal
             return status;
         }
 
-        public async ValueTask<IStatusGeneric> RunDuringSaveChangesEventsAsync(DbContext context, bool postSaveChanges, bool allowAsync)
+        public async ValueTask<IStatusGeneric> RunDuringSaveChangesEventsAsync(bool postSaveChanges, bool allowAsync)
         {
             var status = new StatusGenericHandler();
 
@@ -129,8 +128,7 @@ namespace GenericEventRunner.ForHandlers.Internal
                 {
                     var findRunStatus =
                         _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, eventType, false);
-                    if (!findRunStatus.IsCompleted)
-                        throw new InvalidOperationException("Can only run sync tasks");
+                    findRunStatus.CheckSyncValueTaskWorked();
                     status.CombineStatuses(findRunStatus.Result);
                 }
             }
@@ -140,13 +138,13 @@ namespace GenericEventRunner.ForHandlers.Internal
 
         //NOTE: This had problems throwing an exception (don't know why - RunBeforeSaveChangesEventsAsync work!?).
         //Having it return an exception fixed it
-        public async ValueTask<Exception> RunAfterSaveChangesEventsAsync(DbContext context, bool allowAsync)
+        public async ValueTask RunAfterSaveChangesEventsAsync(DbContext context, bool allowAsync)
         {
             var status = new StatusGenericHandler();
 
             if (_config.NotUsingAfterSaveHandlers)
                 //Skip this stage if NotUsingAfterSaveHandlers is true
-                return null;
+                return;
 
             var eventsToRun = new List<EntityAndEvent>();
             foreach (var entityEntry in context.ChangeTracker.Entries<IEntityWithAfterSaveEvents>())
@@ -165,13 +163,10 @@ namespace GenericEventRunner.ForHandlers.Internal
                 {
                     var findRunStatus =
                         _findRunHandlers.RunHandlersForEventAsync(entityAndEvent, 1, BeforeDuringOrAfter.AfterSave, allowAsync);
-                    if (!findRunStatus.IsCompleted)
-                        throw new InvalidOperationException("Can only run sync tasks");
+                    findRunStatus.CheckSyncValueTaskWorked();
                     status.CombineStatuses(findRunStatus.Result);
                 }
             }
-
-            return null;
         }
-            }
+    }
 }

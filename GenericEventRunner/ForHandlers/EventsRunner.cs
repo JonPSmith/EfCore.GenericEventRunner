@@ -55,9 +55,9 @@ namespace GenericEventRunner.ForHandlers
                 using var transaction = context.Database.CurrentTransaction == null 
                     ? context.Database.BeginTransaction()
                     : null;
-                var duringPreValueTask = eachEventRunner.RunDuringSaveChangesEventsAsync(context, false, false);
-                if (!duringPreValueTask.IsCompleted)
-                    throw new InvalidOperationException("Can only run sync tasks");
+                var duringPreValueTask = eachEventRunner.RunDuringSaveChangesEventsAsync(false, false);
+                duringPreValueTask.CheckSyncValueTaskWorked();
+                duringPreValueTask.CheckSyncValueTaskWorked();
                 localStatus.CombineStatuses(duringPreValueTask.Result);
 
                 var transactionSaveChanges = CallSaveChangesWithExceptionHandler(context, callBaseSaveChanges);
@@ -66,9 +66,8 @@ namespace GenericEventRunner.ForHandlers
 
                 localStatus.SetResult(transactionSaveChanges.Result);
 
-                var duringPostValueTask = eachEventRunner.RunDuringSaveChangesEventsAsync(context, true,false);
-                if (!duringPostValueTask.IsCompleted)
-                    throw new InvalidOperationException("Can only run sync tasks");
+                var duringPostValueTask = eachEventRunner.RunDuringSaveChangesEventsAsync(true,false);
+                duringPostValueTask.CheckSyncValueTaskWorked();
                 if (localStatus.CombineStatuses(duringPostValueTask.Result).HasErrors)
                     return localStatus;
 
@@ -80,8 +79,7 @@ namespace GenericEventRunner.ForHandlers
             var status = new StatusGenericHandler<int>();
 
             var beforeValueTask = eachEventRunner.RunBeforeSaveChangesEventsAsync(context, false);
-            if (!beforeValueTask.IsCompleted)
-                throw new InvalidOperationException("Can only run sync tasks");
+            beforeValueTask.CheckSyncValueTaskWorked();
             status.CombineStatuses(beforeValueTask.Result);
             if (!status.IsValid) 
                 return status;
@@ -118,10 +116,7 @@ namespace GenericEventRunner.ForHandlers
             status.SetResult(callSaveChangesStatus.Result);
 
             var afterValueTask = eachEventRunner.RunAfterSaveChangesEventsAsync(context, false);
-            if (!afterValueTask.IsCompleted && !afterValueTask.IsFaulted)
-                throw new InvalidOperationException("Can only run sync tasks");
-            if (afterValueTask.IsFaulted)
-                throw afterValueTask.Result;
+            afterValueTask.CheckSyncValueTaskWorked();
 
             return status;
         }
@@ -145,7 +140,7 @@ namespace GenericEventRunner.ForHandlers
                 using var transaction = context.Database.CurrentTransaction == null
                     ? await context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
                     : null;
-                var duringPreStatus = await eachEventRunner.RunDuringSaveChangesEventsAsync(context, false, true)
+                var duringPreStatus = await eachEventRunner.RunDuringSaveChangesEventsAsync(false, true)
                     .ConfigureAwait(false);
                 localStatus.CombineStatuses(duringPreStatus);
 
@@ -156,7 +151,7 @@ namespace GenericEventRunner.ForHandlers
 
                 localStatus.SetResult(transactionSaveChanges.Result);
 
-                var duringPostStatus = await eachEventRunner.RunDuringSaveChangesEventsAsync(context, true, true)
+                var duringPostStatus = await eachEventRunner.RunDuringSaveChangesEventsAsync(true, true)
                     .ConfigureAwait(false);
                 if (localStatus.CombineStatuses(duringPostStatus).HasErrors)
                     return localStatus;
