@@ -18,6 +18,7 @@ namespace GenericEventRunner.ForSetup
         /// This limits the number of times it will look for new events from the BeforeSave events.
         /// This stops circular sets of events
         /// The event runner will throw an exception if the BeforeSave loop goes round move than this number.
+        /// The default value is 6
         /// </summary>
         int MaxTimesToLookForBeforeEvents { get; }
 
