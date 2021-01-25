@@ -9,34 +9,32 @@ namespace GenericEventRunner.ForHandlers.Internal
 {
     internal static class ValueTaskSyncCheckers
     {
+        /// <summary>
+        /// This will check the <see cref="ValueTask"/> returned
+        /// by a method and ensure it didn't run any async methods.
+        /// Also, if the method threw an exception it will throw that exception.
+        /// </summary>
+        /// <param name="valueTask">The ValueTask from a method that didn't call any async methods</param>
         public static void CheckSyncValueTaskWorked(this ValueTask valueTask)
         {
             if (!valueTask.IsCompleted)
                 throw new InvalidOperationException("Expected a sync task, but got an async task");
             if (valueTask.IsFaulted)
-            {
-                var task = valueTask.AsTask();
-                if (task.Exception?.InnerExceptions.Count == 1)
-                    throw task.Exception.InnerExceptions.Single();
-                if (task.Exception == null)
-                    throw new InvalidOperationException("ValueTask faulted but didn't have a exception");
-                throw task.Exception;
-            }
+                valueTask.GetAwaiter().GetResult();
         }
 
-        public static void CheckSyncValueTaskWorked<T>(this ValueTask<T> valueTask)
+        /// <summary>
+        /// This will check the <see cref="ValueTask{TResult}"/> returned
+        /// by a method and ensure it didn't run any async methods.
+        /// Also, if the method threw an exception it will throw that exception.
+        /// </summary>
+        /// <param name="valueTask">The ValueTask from a method that didn't call any async methods</param>
+        public static void CheckSyncValueTaskWorked<TResult>(this ValueTask<TResult> valueTask)
         {
             if (!valueTask.IsCompleted)
                 throw new InvalidOperationException("Expected a sync task, but got an async task");
             if (valueTask.IsFaulted)
-            {
-                var task = valueTask.AsTask();
-                if (task.Exception?.InnerExceptions.Count == 1)
-                    throw task.Exception.InnerExceptions.Single();
-                if (task.Exception == null)
-                    throw new InvalidOperationException("ValueTask faulted but didn't have a exception");
-                throw task.Exception;
-            }
+                valueTask.GetAwaiter().GetResult();
         }
     }
 }

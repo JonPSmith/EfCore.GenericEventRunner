@@ -1,7 +1,11 @@
 # Release notes
 
+## 2.3.2
+
+- Bug Fix - better handling of exceptions in sync methods (added better stacktrace)
 
 ## 2.3.1
+
 - Bug Fix - better handling of exceptions in sync methods
 
 ## 2.3.0 
