@@ -4,6 +4,10 @@
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="EfCore.GenericEventRunner.DomainParts" Version="2.2.1" />
     <PackageReference Include="GenericServices.StatusGeneric" Version="1.1.0" />
@@ -12,10 +16,10 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.3.2</PackageVersion>
-    <Version>2.3.2</Version>
-    <AssemblyVersion>2.3.2.0</AssemblyVersion>
-    <FileVersion>2.3.2.0</FileVersion>
+    <PackageVersion>2.3.3</PackageVersion>
+    <Version>2.3.3</Version>
+    <AssemblyVersion>2.3.3.0</AssemblyVersion>
+    <FileVersion>2.3.3.0</FileVersion>
     <PackageId>EfCore.GenericEventRunner</PackageId>
     <Authors>Jon P Smith</Authors>
     <Company>Selective Analytics</Company>
@@ -27,7 +31,7 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>EfCore.GenericServices, EfCore.GenericEventRunner</PackageTags>
     <PackageReleaseNotes>
-      - Bug Fix - better handling of exceptions in sync methods (added better stacktrace)
+      - Bug Fix - calling `SaveChangesAsync` does not return the number of database updates - see issue #6
     </PackageReleaseNotes>
     <PackageIcon>GenericEventsRunnerNuGetIcon128.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -36,10 +40,5 @@
   <ItemGroup>
     <None Include="GenericEventsRunnerNuGetIcon128.png" Pack="true" PackagePath="\" />
   </ItemGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-     <DocumentationFile></DocumentationFile>
-    <OutputPath>bin\Release\</OutputPath>
-  </PropertyGroup>
 
 </Project>

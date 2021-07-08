@@ -1,5 +1,9 @@
 # Release notes
 
+## 2.3.3
+
+- Bug Fix - calling `SaveChangesAsync` does not return the number of database updates - see issue #6
+
 ## 2.3.2
 
 - Bug Fix - better handling of exceptions in sync methods (added better stacktrace)

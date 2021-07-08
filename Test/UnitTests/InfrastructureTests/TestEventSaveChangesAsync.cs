@@ -65,9 +65,10 @@ namespace Test.UnitTests.InfrastructureTests
                 //ATTEMPT
                 var order = new Order("test", DateTime.Now, new List<BasketItemDto> { itemDto });
                 context.Add(order);
-                await context.SaveChangesAsync();
+                var numUpdates = await context.SaveChangesAsync();
 
                 //VERIFY
+                numUpdates.ShouldEqual(3);
                 order.TotalPriceNoTax.ShouldEqual(2 * 123);
                 order.TaxRatePercent.ShouldEqual(4);
                 order.GrandTotalPrice.ShouldEqual(order.TotalPriceNoTax * (1 + order.TaxRatePercent / 100));

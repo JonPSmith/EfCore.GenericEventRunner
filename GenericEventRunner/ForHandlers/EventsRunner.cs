@@ -197,27 +197,12 @@ namespace GenericEventRunner.ForHandlers
 
             if (status.CombineStatuses(callSaveChangesStatus).HasErrors)
                 return status;
-            do
-            {
-                try
-                {
-                    status.SetResult(await callBaseSaveChangesAsync().ConfigureAwait(false));
-                    break; //This breaks out of the do/while
-                }
-                catch (Exception e)
-                {
-                    IStatusGeneric exceptionStatus = null;
-                    if (_config.ExceptionHandlerDictionary.TryGetValue(context.GetType(), out var exceptionHandler))
-                        exceptionStatus = exceptionHandler(e, context);
-                    if (exceptionStatus == null)
-                        //This means the SaveChangesExceptionHandler doesn't cover this type of Concurrency Exception
-                        throw;
-                    //SaveChangesExceptionHandler ran, so combine its error into the outer status
-                    status.CombineStatuses(exceptionStatus);
-                }
-                //If the SaveChangesExceptionHandler fixed the problem then we call SaveChanges again, but with the same exception catching.
-            } while (status.IsValid);
-            await eachEventRunner.RunAfterSaveChangesEventsAsync(context, true).ConfigureAwait(false);
+
+            //Copy over the saveChanges result
+            status.SetResult(callSaveChangesStatus.Result);
+
+            await eachEventRunner.RunAfterSaveChangesEventsAsync(context, true);
+
             return status;
         }
 
